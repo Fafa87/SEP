@@ -1,0 +1,13 @@
+name: sep_3_6
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.6
+  - numpy
+  - fire
+  - imageio
+  - pathlib
+  - attrdict
+prefix: C:\Users\Fafa\miniconda3\envs\sep_3_6
+
