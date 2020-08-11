@@ -9,5 +9,7 @@ dependencies:
   - imageio
   - pathlib
   - attrdict
+  - tqdm
+  - pandas
 prefix: C:\Users\Fafa\miniconda3\envs\sep_3_6
 
