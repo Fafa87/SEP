@@ -39,8 +39,8 @@ class ImagesLoader(Loader):
     def list_images(self):
         return list(self.input_order)
 
-    def list_images_ids(self):
-        return [self.path_to_id(p) for p in self.input_order]
+    def list_images_paths(self):
+        return [self.input_images[p] for p in self.input_order]
 
     def __get_file_path(self, path_set, name_or_num):
         if isinstance(name_or_num, int):
@@ -66,3 +66,5 @@ class ImagesLoader(Loader):
             return None
         return imageio.imread(path_to_file)
 
+    def __str__(self):
+        return f"ImageLoader for: {self.data_root}"
