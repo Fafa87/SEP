@@ -24,7 +24,8 @@ def evaluate(data_loader: Loader, producer: Producer, metricer, detailer, output
 
         segment, segment_tag = producer.calculate(image, tag)
         data_point_eval = metricer.evaluate_image(image, tag, segment, segment_tag, gt)
-        detailer.save_image_evaluation(data_point_eval)
+        if detailer is not None:
+            detailer.save_image_evaluation(data_point_eval)
 
     return metricer.report_overall()
 
