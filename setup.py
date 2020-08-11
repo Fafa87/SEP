@@ -17,7 +17,7 @@ setuptools.setup(
     keywords=["evaluation", "semantic", "segmentation", "benchmark"],
     license="BSD",
     long_description="",
-    name="sep",
+    name="semevalplatform",
     description="Semantic Evaluation Platform",
     packages=setuptools.find_packages(exclude=[
         "tests", "examples"
