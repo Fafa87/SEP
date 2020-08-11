@@ -4,7 +4,7 @@ setuptools.setup(
     author="Filip Mroz",
     author_email="fafafft@gmail.com",
     classifiers=[
-        "Development Status :: 5 - Production/Stable",
+        "Development Status :: 2 - Pre-Alpha",
         "Intended Audience :: Science/Research",
         "License :: OSI Approved :: BSD License",
         "Operating System :: OS Independent",
@@ -33,5 +33,5 @@ setuptools.setup(
         "pandas"
     ],
     url="https://github.com/Fafa87/SEP",
-    version="0.0.1"
+    version="0.0.3"
 )
