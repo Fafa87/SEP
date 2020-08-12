@@ -4,7 +4,7 @@ import pandas as pd
 import typing
 
 from sep.assessors.metrics import Metric
-from sep.assessors.regions import Region
+from sep.assessors.regions import Region, EntireRegion
 
 
 class Metricer:
@@ -16,7 +16,7 @@ class Metricer:
 
     def __init__(self):
         self.metrics = []
-        self.regions = [Region()]
+        self.regions = [EntireRegion()]
 
     def calculate_metrics(self, segmentation, ground_truth):
         reports = []
@@ -26,5 +26,6 @@ class Metricer:
 
             metrics_region = {metric.name: metric.calculate(seg_region, gt_region) for metric in self.metrics}
             region_report = pd.DataFrame.from_records([metrics_region])
+            region_report["region"] = region.name
             reports.append(region_report)
         return pd.concat(reports)

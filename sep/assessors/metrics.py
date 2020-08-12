@@ -15,12 +15,14 @@ class Metric(ABC):
     def calculate(self, segmentation, ground_truth):
         pass
 
+    def __str__(self):
+        return self.name
 
-class IouMetric(ABC):
+
+class IouMetric(Metric):
     def __init__(self):
         super().__init__("iou")
 
-    @abstractmethod
     def calculate(self, segmentation, ground_truth):
         if segmentation.max() > 1:
             segmentation = segmentation > 0
@@ -28,4 +30,4 @@ class IouMetric(ABC):
             ground_truth = ground_truth > 0
 
         return np.sum(np.logical_and(segmentation, ground_truth)) / \
-               np.sum(np.logical_or(segmentation, ground_truth)) + 0.0001
+               np.sum(np.logical_or(segmentation, ground_truth)) + 0.00000001
