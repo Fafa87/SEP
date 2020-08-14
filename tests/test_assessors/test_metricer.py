@@ -85,10 +85,16 @@ class TestMetricer(unittest.TestCase):
         seg = np.zeros((10, 10))
         seg[4:6, 0:5] = 1
 
-        # TODO NOW
         report = metricer.evaluate_image(image, tag={"id": "blobix"}, gt=gt,
                                          segment=seg, segment_tag={"name": "Resnet", "fps": 20})
         self.assertEqual(1, len(report))
+        self.assertEqual(5, len(report.columns))
+        nptest.assert_almost_equal(report["iou"].values, [5.0 / (50 + 5)])
+        self.assertEqual(report["id"].values, ["blobix"])
+        self.assertEqual(report["region"].values, ["Entire image"])
+        self.assertEqual(report["seg_name"].values, ["Resnet"])
+        self.assertEqual(report["seg_fps"].values, [20])
+
 
 
 

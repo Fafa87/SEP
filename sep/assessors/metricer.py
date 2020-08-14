@@ -21,6 +21,9 @@ class Metricer:
 
     def calculate_metrics(self, segmentation: np.ndarray, ground_truth: np.ndarray) -> pd.DataFrame:
         reports = []
+        proper_report_columns_order = [metric.name for metric in self.metrics]
+        proper_report_columns_order.insert(0, "region")
+
         for region in self.regions:
             seg_region = region.regionize(ground_truth=ground_truth, mask=segmentation)
             gt_region = region.regionize(ground_truth=ground_truth, mask=ground_truth)
@@ -29,7 +32,7 @@ class Metricer:
             region_report = pd.DataFrame.from_records([metrics_region])
             region_report["region"] = region.name
             reports.append(region_report)
-        return pd.concat(reports)
+        return pd.concat(reports).reindex(proper_report_columns_order, axis=1)
 
     def report_overall(self):
         """
@@ -49,7 +52,8 @@ class Metricer:
         Returns:
 
         """
-        pass
+        # TODO multiple levels of aggregation
+        return pd.concat(self.reports)
 
     def evaluate_image(self, image: np.ndarray, tag: dict, segment: np.ndarray, segment_tag: dict,
                        gt: np.ndarray) -> pd.DataFrame:
@@ -58,9 +62,9 @@ class Metricer:
         Evaluate the given image, ground truth and segmentation and store and aggregate the metrics report.
         """
         metric_report = self.calculate_metrics(segmentation=segment, ground_truth=gt)
-        metric_report["id"] = tag["id"]
+        metric_report.insert(0, "id", tag["id"])
         for (k, v) in tag.items():
-            if k is not "id":
+            if k != "id":
                 metric_report["img_" + k] = v
 
         for (k, v) in segment_tag.items():
