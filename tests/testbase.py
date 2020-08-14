@@ -1,5 +1,7 @@
 import os
+import shutil
 import unittest
+import tempfile
 
 import imageio
 import numpy as np
@@ -11,7 +13,10 @@ class TestBase(unittest.TestCase):
 
     def tearDown(self):
         for path in self.to_clear:
-            os.remove(path)
+            if os.path.isfile(path):
+                os.remove(path)
+            else:
+                shutil.rmtree(path)
 
     def save_temp(self, path, image):
         self.to_clear.append(path)
@@ -20,6 +25,11 @@ class TestBase(unittest.TestCase):
     def create_temp(self, path):
         self.to_clear.append(path)
         return open(path, "w")
+
+    def create_temp_dir(self):
+        temp_dir = tempfile.mkdtemp()
+        self.to_clear.append(temp_dir)
+        return temp_dir
 
     def draw_cell(self, image, position, radius, value):
         left = max(0, position[0] - radius)
