@@ -17,8 +17,9 @@ class Metricer:
     def __init__(self):
         self.metrics = []
         self.regions = [EntireRegion()]
+        self.reports = []
 
-    def calculate_metrics(self, segmentation, ground_truth):
+    def calculate_metrics(self, segmentation: np.ndarray, ground_truth: np.ndarray) -> pd.DataFrame:
         reports = []
         for region in self.regions:
             seg_region = region.regionize(ground_truth=ground_truth, mask=segmentation)
@@ -33,6 +34,8 @@ class Metricer:
     def report_overall(self):
         """
         This should aggregate all the collected results.
+        result_sampler per image region
+            id, *img_tag, *seg_tag, iou, recall..., region_eval_path
 
         result_sample per image:
             id, name, *img_tag, *seg_tag, metrics (region_A_iou, region_A_path?, region_B_iou ..., iou_avg)
@@ -54,5 +57,14 @@ class Metricer:
         """
         Evaluate the given image, ground truth and segmentation and store and aggregate the metrics report.
         """
+        metric_report = self.calculate_metrics(segmentation=segment, ground_truth=gt)
+        metric_report["id"] = tag["id"]
+        for (k, v) in tag.items():
+            if k is not "id":
+                metric_report["img_" + k] = v
 
-        pass
+        for (k, v) in segment_tag.items():
+            metric_report["seg_" + k] = v
+
+        self.reports.append(metric_report)
+        return metric_report
