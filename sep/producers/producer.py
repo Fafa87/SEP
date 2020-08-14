@@ -1,5 +1,6 @@
 from abc import ABC
 
+import numpy as np
 
 class Producer(ABC):
     """
@@ -16,10 +17,10 @@ class Producer(ABC):
     def load_tag(self, id):
         pass
 
-    def segmentation(self, image):
+    def segmentation(self, image: np.ndarray) -> np.ndarray:
         pass
 
-    def calculate(self, input_image, input_tag):
+    def calculate(self, input_image: np.ndarray, input_tag: dict):
         pass
 
     def __str__(self):

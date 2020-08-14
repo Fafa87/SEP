@@ -1,5 +1,6 @@
 from abc import abstractmethod, ABC
 
+import numpy as np
 
 class Region(ABC):
     """
@@ -11,7 +12,7 @@ class Region(ABC):
         self.name = name
 
     @abstractmethod
-    def regionize(self, ground_truth, mask):
+    def regionize(self, ground_truth: np.ndarray, mask: np.ndarray) -> np.ndarray:
         return mask
 
     def __str__(self):
@@ -22,6 +23,6 @@ class EntireRegion(Region):
     def __init__(self):
         super().__init__("Entire image")
 
-    def regionize(self, ground_truth, mask):
+    def regionize(self, ground_truth, mask) -> np.ndarray:
         return mask
 

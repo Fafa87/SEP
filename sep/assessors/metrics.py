@@ -12,7 +12,7 @@ class Metric(ABC):
         self.name = name
 
     @abstractmethod
-    def calculate(self, segmentation, ground_truth):
+    def calculate(self, segmentation: np.ndarray, ground_truth: np.ndarray) -> float:
         pass
 
     def __str__(self):
@@ -23,7 +23,7 @@ class IouMetric(Metric):
     def __init__(self):
         super().__init__("iou")
 
-    def calculate(self, segmentation, ground_truth):
+    def calculate(self, segmentation, ground_truth) -> float:
         if segmentation.max() > 1:
             segmentation = segmentation > 0
         if ground_truth.max() > 1:
