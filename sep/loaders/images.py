@@ -1,6 +1,7 @@
+import json
 import os
-from glob import glob
 import pathlib
+from glob import glob
 
 import imageio
 
@@ -11,6 +12,7 @@ class ImagesLoader(Loader):
     """
     Look through entire file structure in the data_root path and collect all the images.
     """
+
     def __init__(self, data_root, image_extensions=None, annotation_suffix="_gt", annotation_extension=".png"):
         super().__init__()
         self.data_root = data_root
@@ -57,8 +59,12 @@ class ImagesLoader(Loader):
     def load_tag(self, name_or_num):
         path_to_file = self.__get_file_path(self.json_tags, name_or_num)
         if path_to_file is None:
-            return None
-        return imageio.imread(path_to_file)
+            return {"id": name_or_num}
+        else:
+            with open(str(path_to_file), 'r') as f:
+                tag = json.load(f)
+            assert "id" in tag
+            return tag
 
     def load_annotation(self, name_or_num):
         path_to_file = self.__get_file_path(self.annotation_images, name_or_num)

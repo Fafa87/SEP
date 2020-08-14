@@ -19,20 +19,20 @@ class Producer(ABC):
         self.name = name
 
     def load_segment(self, id):
-        cache_path = (self.cache_root / id).with_suffix(".tif")
+        cache_path = (self.cache_root / str(id)).with_suffix(".tif")
         return imageio.imread(str(cache_path))
 
     def load_tag(self, id):
-        cache_path = (self.cache_root / id).with_suffix(".json")
+        cache_path = (self.cache_root / str(id)).with_suffix(".json")
         with open(str(cache_path), 'r') as f:
             return json.load(f)
 
     def __save_segment(self, id, segm):
-        cache_path = (self.cache_root / id).with_suffix(".tif")
+        cache_path = (self.cache_root / str(id)).with_suffix(".tif")
         imageio.imsave(str(cache_path), segm)
 
     def __save_tag(self, id, tag):
-        cache_path = (self.cache_root / id).with_suffix(".json")
+        cache_path = (self.cache_root / str(id)).with_suffix(".json")
         with open(str(cache_path), 'w') as f:
             json.dump(tag, f)
 
@@ -43,6 +43,7 @@ class Producer(ABC):
 
     def calculate(self, input_image: np.ndarray, input_tag: dict) -> (np.ndarray, dict):
         # TODO is possible and requested load results and tags from cache
+        assert input_tag is not None
 
         start_time = timer()
         seg = self.segmentation(input_image).astype(np.uint8)
@@ -50,7 +51,7 @@ class Producer(ABC):
         prediction_time = timer() - start_time
         seg_tag['run_time'] = prediction_time
         seg_tag['run_fps'] = round(1.0 / prediction_time, 2)
-        seg_tag['producer_details'] = self.__retr__()
+        seg_tag['producer_details'] = self.__repr__()
 
         if self.cache_root and "id" in input_tag:
             self.__save_tag(input_tag["id"], seg_tag)
@@ -58,7 +59,7 @@ class Producer(ABC):
 
         return seg, seg_tag
 
-    def __retr__(self):
+    def __repr__(self):
         return f"{self.__class__} ({self.__dict__})"
 
 

@@ -14,7 +14,7 @@ def evaluate(data_loader: Loader, producer: Producer, metricer, detailer, output
     print(f"There are {len(data_loader)} images to evaluate on.")
     os.makedirs(output_evalpath, exist_ok=True)
 
-    for i in range(tqdm(len(data_loader), "Evaluating")):
+    for i in tqdm(range(len(data_loader)), "Evaluating"):
         image = data_loader.load_image(i)
         gt = data_loader.load_annotation(i)
         tag = data_loader.load_tag(i)
