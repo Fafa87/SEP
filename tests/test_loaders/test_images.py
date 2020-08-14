@@ -1,12 +1,14 @@
+import pathlib
 import unittest
 
+from tests.testbase import TestBase
 from sep.loaders.images import ImagesLoader
 import numpy.testing as nptest
 
 
-class TestImagesLoader(unittest.TestCase):
+class TestImagesLoader(TestBase):
     def test_loading(self):
-        test_images_loader = ImagesLoader("input")
+        test_images_loader = ImagesLoader(TestBase.test_dir("input"))
         self.assertEqual(2, len(test_images_loader))
         self.assertEqual(['lights01', 'lights02'], test_images_loader.input_order)
 

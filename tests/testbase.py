@@ -1,4 +1,5 @@
 import os
+import pathlib
 import shutil
 import unittest
 import tempfile
@@ -25,6 +26,9 @@ class TestBase(unittest.TestCase):
     def create_temp(self, path):
         self.to_clear.append(path)
         return open(path, "w")
+
+    def test_dir(self, *path_components):
+        return str(pathlib.Path(__file__).parent.joinpath(*path_components))
 
     def create_temp_dir(self):
         temp_dir = tempfile.mkdtemp()
