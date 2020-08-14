@@ -75,6 +75,11 @@ class TestMetricer(unittest.TestCase):
         nptest.assert_almost_equal([5.0 / (50 + 5), 5.0 / 50], report[iou_metric.name].values)
         nptest.assert_equal(["Entire image", "Dummy"], report["region"].values)
 
+    def test_evaluate_image(self):
+        metricer = Metricer()
+        # TODO NOW
+        #metricer.evaluate_image()
+
 
 if __name__ == '__main__':
     unittest.main()

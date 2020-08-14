@@ -5,3 +5,6 @@ class Detailer:
     """
     def __init__(self, path, regions):
         pass
+
+    def save_image_evaluation(self, data_point_eval):
+        pass

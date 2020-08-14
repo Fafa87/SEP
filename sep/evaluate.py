@@ -5,11 +5,13 @@ from pathlib import Path
 import pandas as pd
 from tqdm import tqdm
 
+from sep.assessors.detailer import Detailer
+from sep.assessors.metricer import Metricer
 from sep.loaders.loader import Loader
 from sep.producers.producer import Producer
 
 
-def evaluate(data_loader: Loader, producer: Producer, metricer, detailer, output_evalpath):
+def evaluate(data_loader: Loader, producer: Producer, metricer: Metricer, detailer: Detailer, output_evalpath):
     print(f"Evaluation of {producer} on data from {data_loader}.")
     print(f"There are {len(data_loader)} images to evaluate on.")
     os.makedirs(output_evalpath, exist_ok=True)
@@ -24,7 +26,7 @@ def evaluate(data_loader: Loader, producer: Producer, metricer, detailer, output
 
         segment, segment_tag = producer.calculate(image, tag)
         data_point_eval = metricer.evaluate_image(image, tag, segment, segment_tag, gt)
-        if detailer is not None:
+        if detailer is not None:  # TODO detailer vs metricer relation has to be rethought
             detailer.save_image_evaluation(data_point_eval)
 
     return metricer.report_overall()
