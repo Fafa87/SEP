@@ -1,4 +1,8 @@
+import os
+
 import setuptools
+
+version = os.environ.get("RELEASE_VERSION", "0.0.0")
 
 setuptools.setup(
     author="Filip Mroz",
@@ -33,5 +37,5 @@ setuptools.setup(
         "pandas"
     ],
     url="https://github.com/Fafa87/SEP",
-    version="0.0.3"
+    version=version
 )
