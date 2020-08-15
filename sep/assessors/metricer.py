@@ -53,7 +53,10 @@ class Metricer:
 
         """
         # TODO multiple levels of aggregation
-        return pd.concat(self.reports)
+        return pd.concat(self.reports).fillna('').groupby(['seg_producer_name', 'region']).mean()
+
+    def report_full(self):
+        return pd.concat(self.reports).fillna('')
 
     def evaluate_image(self, image: np.ndarray, tag: dict, segment: np.ndarray, segment_tag: dict,
                        gt: np.ndarray) -> pd.DataFrame:
@@ -63,6 +66,7 @@ class Metricer:
         """
         metric_report = self.calculate_metrics(segmentation=segment, ground_truth=gt)
         metric_report.insert(0, "id", tag["id"])
+        # TODO multilayer tagging
         for (k, v) in tag.items():
             if k != "id":
                 metric_report["img_" + k] = v

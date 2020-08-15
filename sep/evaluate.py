@@ -11,7 +11,8 @@ from sep.loaders.loader import Loader
 from sep.producers.producer import Producer
 
 
-def evaluate(data_loader: Loader, producer: Producer, metricer: Metricer, detailer: Detailer, output_evalpath):
+def evaluate(data_loader: Loader, producer: Producer, metricer: Metricer,
+             detailer: typing.Optional[Detailer], output_evalpath):
     print(f"Evaluation of {producer} on data from {data_loader}.")
     print(f"There are {len(data_loader)} images to evaluate on.")
     os.makedirs(output_evalpath, exist_ok=True)
