@@ -48,6 +48,8 @@ class Producer(ABC):
     def calculate(self, input_image: np.ndarray, input_tag: dict) -> (np.ndarray, dict):
         # TODO is possible and requested load results and tags from cache
         assert input_tag is not None
+        if input_image.dtype != np.uint8: # TODO we need to be sure
+            input_image = (input_image * 255).astype(np.uint8)
         assert input_image.dtype == np.uint8
 
         start_time = timer()

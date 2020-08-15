@@ -10,7 +10,7 @@ import tests.testbase
 class TestProducer(tests.testbase.TestBase):
     class Threshold(sep.producers.producer.Producer):
         def segmentation(self, image):
-            return image > 0.5
+            return image > 128
 
     def test_producer_calculate(self):
         random_soup = np.random.random((10, 10)) / 2.0
@@ -21,7 +21,7 @@ class TestProducer(tests.testbase.TestBase):
         thresh_producer = TestProducer.Threshold("DummyThreshold", cache_root=self.create_temp_dir())
         segm, producer_tags = thresh_producer.calculate(random_soup, random_soup_tags)
 
-        self.assertEqual(segm.sum(), 2 * 3)
+        self.assertEqual(2 * 3, segm.sum())
         self.assertIn("run_time", producer_tags)
         self.assertIn("run_fps", producer_tags)
         self.assertIn("producer_details", producer_tags)
