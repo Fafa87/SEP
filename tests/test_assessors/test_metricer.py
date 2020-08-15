@@ -77,8 +77,25 @@ class TestMetricer(unittest.TestCase):
 
     def test_evaluate_image(self):
         metricer = Metricer()
-        # TODO NOW
-        #metricer.evaluate_image()
+        metricer.metrics.append(IouMetric())
+
+        image = np.random.random((10, 10, 3))
+        gt = np.zeros((10, 10), dtype=bool)
+        gt[0:5, 0:10] = True
+        seg = np.zeros((10, 10))
+        seg[4:6, 0:5] = 1
+
+        report = metricer.evaluate_image(image, tag={"id": "blobix"}, gt=gt,
+                                         segment=seg, segment_tag={"name": "Resnet", "fps": 20})
+        self.assertEqual(1, len(report))
+        self.assertEqual(5, len(report.columns))
+        nptest.assert_almost_equal(report["iou"].values, [5.0 / (50 + 5)])
+        self.assertEqual(report["id"].values, ["blobix"])
+        self.assertEqual(report["region"].values, ["Entire image"])
+        self.assertEqual(report["seg_name"].values, ["Resnet"])
+        self.assertEqual(report["seg_fps"].values, [20])
+
+
 
 
 if __name__ == '__main__':

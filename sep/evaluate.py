@@ -11,12 +11,15 @@ from sep.loaders.loader import Loader
 from sep.producers.producer import Producer
 
 
-def evaluate(data_loader: Loader, producer: Producer, metricer: Metricer, detailer: Detailer, output_evalpath):
-    print(f"Evaluation of {producer} on data from {data_loader}.")
-    print(f"There are {len(data_loader)} images to evaluate on.")
+def evaluate(data_loader: Loader, producer: Producer, metricer: Metricer,
+             detailer: typing.Optional[Detailer], output_evalpath,
+             verbose=1):
+    if verbose:
+        print(f"Evaluation of {producer} on data from {data_loader}.")
+        print(f"There are {len(data_loader)} images to evaluate on.")
     os.makedirs(output_evalpath, exist_ok=True)
 
-    for i in tqdm(range(len(data_loader)), "Evaluating"):
+    for i in tqdm(range(len(data_loader)), producer.name):
         image = data_loader.load_image(i)
         gt = data_loader.load_annotation(i)
         tag = data_loader.load_tag(i)
@@ -35,11 +38,12 @@ def evaluate(data_loader: Loader, producer: Producer, metricer: Metricer, detail
 def compare(data_loader: Loader, producers: typing.List[Producer], metricer, detailer, output_evalpath):
     print(f"Comparison of {len(producers)} producers on data from {data_loader}.")
 
-    reports = pd.DataFrame()
+    reports = []
     for producer in producers:
         producer_eval_path = Path(output_evalpath) / producer.name
-        producer_report = evaluate(data_loader, producer, metricer, detailer, producer_eval_path)
-        producer_report.insert(loc=0, column='Producer', value=producer.name)
+        producer_report = evaluate(data_loader, producer, metricer, detailer, producer_eval_path,
+                                   verbose=0)
+        producer_report.insert(loc=0, column='producer', value=producer.name)
 
-        reports = reports.concat(producer_report)
-    return reports
+        reports.append(producer_report)
+    return pd.concat(reports).groupby(['producer', 'region']).mean()

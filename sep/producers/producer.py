@@ -38,12 +38,19 @@ class Producer(ABC):
 
     @abstractmethod
     def segmentation(self, image: np.ndarray) -> np.ndarray:
+        """
+        Args:
+            image: image in uint8 (0-255)
+        """
         # TODO for now assumes it is binary or 0-1 numeric
         pass
 
     def calculate(self, input_image: np.ndarray, input_tag: dict) -> (np.ndarray, dict):
         # TODO is possible and requested load results and tags from cache
         assert input_tag is not None
+        if input_image.dtype != np.uint8: # TODO we need to be sure
+            input_image = (input_image * 255).astype(np.uint8)
+        assert input_image.dtype == np.uint8
 
         start_time = timer()
         seg = self.segmentation(input_image).astype(np.uint8)
@@ -51,6 +58,7 @@ class Producer(ABC):
         prediction_time = timer() - start_time
         seg_tag['run_time'] = prediction_time
         seg_tag['run_fps'] = round(1.0 / prediction_time, 2)
+        seg_tag['producer_name'] = self.name
         seg_tag['producer_details'] = self.__repr__()
 
         if self.cache_root and "id" in input_tag:

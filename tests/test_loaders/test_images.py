@@ -8,7 +8,7 @@ import numpy.testing as nptest
 
 class TestImagesLoader(TestBase):
     def test_loading(self):
-        test_images_loader = ImagesLoader(TestBase.test_dir("input"))
+        test_images_loader = ImagesLoader(self.test_dir("input/lights"))
         self.assertEqual(2, len(test_images_loader))
         self.assertEqual(['lights01', 'lights02'], test_images_loader.input_order)
 
