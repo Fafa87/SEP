@@ -53,7 +53,7 @@ class Metricer:
 
         """
         # TODO multiple levels of aggregation
-        return pd.concat(self.reports).fillna('').groupby(['seg_producer_name', 'region']).mean()
+        return pd.concat(self.reports).fillna('').groupby(['region']).mean()
 
     def report_full(self):
         return pd.concat(self.reports).fillna('')

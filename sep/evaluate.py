@@ -36,11 +36,11 @@ def evaluate(data_loader: Loader, producer: Producer, metricer: Metricer,
 def compare(data_loader: Loader, producers: typing.List[Producer], metricer, detailer, output_evalpath):
     print(f"Comparison of {len(producers)} producers on data from {data_loader}.")
 
-    reports = pd.DataFrame()
+    reports = []
     for producer in producers:
         producer_eval_path = Path(output_evalpath) / producer.name
         producer_report = evaluate(data_loader, producer, metricer, detailer, producer_eval_path)
-        producer_report.insert(loc=0, column='Producer', value=producer.name)
+        producer_report.insert(loc=0, column='producer', value=producer.name)
 
-        reports = reports.concat(producer_report)
-    return reports
+        reports.append(producer_report)
+    return pd.concat(reports).groupby(['producer', 'region']).mean()
