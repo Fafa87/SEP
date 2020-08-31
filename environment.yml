@@ -11,5 +11,8 @@ dependencies:
   - attrdict
   - tqdm
   - pandas
+  - matplotlib
+  - notebook
+  - jupyter_contrib_nbextensions
 prefix: C:\Users\Fafa\miniconda3\envs\sep_3_6
 
