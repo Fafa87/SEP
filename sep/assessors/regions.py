@@ -13,13 +13,14 @@ class Region(ABC):
     def __init__(self, name):
         self.name = name
 
-    @abstractmethod
     def regionize(self, ground_truth: np.ndarray, mask: np.ndarray) -> np.ndarray:
-        return mask
+        # TODO rethink mask 0-1 vs 0-255 or it may not be a mask?
+        relevant_area = self.extract_region(ground_truth)
+        return mask.astype(np.bool) & relevant_area
 
+    @abstractmethod
     def extract_region(self, ground_truth: np.ndarray) -> np.ndarray:
-        # TODO rethink mask 0-1 vs 0-255
-        return self.regionize(ground_truth, np.ones_like(ground_truth))
+        pass
 
     def __str__(self):
         return self.name
@@ -29,5 +30,5 @@ class EntireRegion(Region):
     def __init__(self):
         super().__init__("Entire image")
 
-    def regionize(self, ground_truth, mask) -> np.ndarray:
-        return mask
+    def extract_region(self, ground_truth: np.ndarray) -> np.ndarray:
+        return np.ones_like(ground_truth, dtype=np.bool)

@@ -36,8 +36,8 @@ class TestRegions(unittest.TestCase):
 
 class TestMetricer(unittest.TestCase):
     class DummyRegion(Region):
-        def regionize(self, ground_truth, mask):
-            return ground_truth.astype(np.bool) & mask.astype(np.bool)
+        def extract_region(self, ground_truth: np.ndarray) -> np.ndarray:
+            return ground_truth.astype(np.bool)
 
     def test_basic_metricer(self):
         metricer = Metricer()

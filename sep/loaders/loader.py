@@ -1,5 +1,7 @@
 from abc import ABC, abstractmethod
 
+import numpy as np
+
 
 class Loader(ABC):
     def __init__(self):
@@ -39,3 +41,7 @@ class Loader(ABC):
 
     def __len__(self):
         return len(self.list_images())
+
+    def validate_annotation(self, annotation: np.ndarray):
+        # TMP require it to be a mask
+        assert annotation.ndim == 2

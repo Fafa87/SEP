@@ -70,7 +70,9 @@ class ImagesLoader(Loader):
         path_to_file = self.__get_file_path(self.annotation_images, name_or_num)
         if path_to_file is None:
             return None
-        return imageio.imread(path_to_file)
+        annotation_data = imageio.imread(path_to_file)
+        self.validate_annotation(annotation_data)
+        return annotation_data
 
     def __str__(self):
         return f"ImageLoader for: {self.data_root}"
