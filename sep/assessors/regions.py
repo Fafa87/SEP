@@ -36,7 +36,7 @@ class EntireRegion(Region):
 
 
 class EdgesRegion(Region):
-    def __init__(self, edge_size, name="Edges of gt"):
+    def __init__(self, edge_size, name="Edges"):
         """
         Region consisting of the edge of the ground truth.
         Args:
@@ -54,3 +54,23 @@ class EdgesRegion(Region):
         dilated = skimage.morphology.binary_dilation(ground_truth, selem)
         eroded = skimage.morphology.binary_erosion(ground_truth, selem)
         return dilated > eroded
+
+
+class DetailsRegion(Region):
+    def __init__(self, edge_size, name="Details"):
+        """
+        Region consisting of the small objects of the ground truth.
+        Args:
+            edge_size: if int it is pixel size, if float it is the fraction of the mean of image dimension
+        """
+        super().__init__(name)
+        self.edge_size = edge_size
+
+    def extract_region(self, ground_truth: np.ndarray) -> np.ndarray:
+        if isinstance(self.edge_size, float):
+            mean_size = (ground_truth.shape[0] + ground_truth.shape[1]) / 2
+            selem = skimage.morphology.disk(mean_size * self.edge_size)
+        else:
+            selem = skimage.morphology.disk(self.edge_size)
+        opened = skimage.morphology.binary_opening(ground_truth, selem)
+        return (ground_truth > 0) > opened
