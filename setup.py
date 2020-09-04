@@ -34,7 +34,10 @@ setuptools.setup(
         "pathlib",
         "attrdict",
         "tqdm",
-        "pandas"
+        "pandas",
+        "matplotlib",
+        "notebook",
+        "jupyter_contrib_nbextensions"
     ],
     url="https://github.com/Fafa87/SEP",
     version=version

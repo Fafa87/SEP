@@ -30,6 +30,22 @@ class TestImagesLoader(TestBase):
         tag_1 = test_images_loader.load_tag(0)
         self.assertEqual(0, tag_1["id"])  # TODO RETHINK default tags mirror exact call
 
+    def test_get_element(self):
+        test_images_loader = ImagesLoader(self.test_dir("input/lights"))
+        second_elem = test_images_loader[1]
+        self.assertIn("image", second_elem)
+        self.assertIn("annotation", second_elem)
+        self.assertIn("tag", second_elem)
+
+    def test_iterate_through(self):
+        test_images_loader = ImagesLoader(self.test_dir("input/lights"))
+        data = [p for p in test_images_loader]
+        self.assertEqual(2, len(data))
+        second_elem = data[1]
+        self.assertIn("image", second_elem)
+        self.assertIn("annotation", second_elem)
+        self.assertIn("tag", second_elem)
+
 
 if __name__ == '__main__':
     unittest.main()

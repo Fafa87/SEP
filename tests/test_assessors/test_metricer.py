@@ -5,7 +5,7 @@ import numpy.testing as nptest
 
 from sep.assessors.metricer import Metricer
 from sep.assessors.metrics import IouMetric
-from sep.assessors.regions import Region, EntireRegion
+from sep.assessors.regions import Region, EntireRegion, EdgesRegion, DetailsRegion
 
 
 class TestMetrics(unittest.TestCase):
@@ -33,11 +33,37 @@ class TestRegions(unittest.TestCase):
         self.assertEqual("Entire image", entire_region.name)
         nptest.assert_equal(blob_1, entire_region.regionize(blob_2, blob_1))
 
+    def test_edges_smoke(self):
+        edges_region_int = EdgesRegion(2)
+        blob_1 = np.zeros((10, 10))
+        blob_1[0:5, 0:10] = 1
+
+        blob_2 = np.zeros((10, 10))
+        blob_2[4:6, 0:5] = 1
+
+        some_region = edges_region_int.regionize(blob_2, blob_1)
+
+        edges_region_float = EdgesRegion(0.2)
+        some_region = edges_region_float.regionize(blob_2, blob_1)
+
+    def test_details_smoke(self):
+        details_region_int = DetailsRegion(2)
+        blob_1 = np.zeros((10, 10))
+        blob_1[0:5, 0:10] = 1
+
+        blob_2 = np.zeros((10, 10))
+        blob_2[4:6, 0:5] = 1
+
+        some_region = details_region_int.regionize(blob_2, blob_1)
+
+        details_region_float = DetailsRegion(0.2)
+        some_region = details_region_float.regionize(blob_2, blob_1)
+
 
 class TestMetricer(unittest.TestCase):
     class DummyRegion(Region):
-        def regionize(self, ground_truth, mask):
-            return ground_truth.astype(np.bool) & mask.astype(np.bool)
+        def extract_region(self, ground_truth: np.ndarray) -> np.ndarray:
+            return ground_truth.astype(np.bool)
 
     def test_basic_metricer(self):
         metricer = Metricer()
@@ -94,8 +120,6 @@ class TestMetricer(unittest.TestCase):
         self.assertEqual(report["region"].values, ["Entire image"])
         self.assertEqual(report["seg_name"].values, ["Resnet"])
         self.assertEqual(report["seg_fps"].values, [20])
-
-
 
 
 if __name__ == '__main__':

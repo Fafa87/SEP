@@ -11,5 +11,9 @@ dependencies:
   - attrdict
   - tqdm
   - pandas
+  - matplotlib
+  - notebook
+  - jupyter_contrib_nbextensions
+  - scikit-image
 prefix: C:\Users\Fafa\miniconda3\envs\sep_3_6
 
