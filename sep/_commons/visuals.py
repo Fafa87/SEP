@@ -1,7 +1,11 @@
-import numpy as np
-
 from matplotlib import pyplot as plt, patches as mpatches
-from matplotlib.colors import NoNorm
+
+import skimage
+from skimage.color.colorlabel import DEFAULT_COLORS
+
+
+def overlay(image, labels):
+    return skimage.color.label2rgb(labels, image, colors=DEFAULT_COLORS, bg_label=0)
 
 
 def show_with_legend(image, legend, title="", scale=None):
