@@ -27,7 +27,7 @@ class TestBase(unittest.TestCase):
         self.to_clear.append(path)
         return open(path, "w")
 
-    def test_dir(self, *path_components):
+    def root_test_dir(self, *path_components):
         return str(pathlib.Path(__file__).parent.joinpath(*path_components))
 
     def create_temp_dir(self):

@@ -8,7 +8,7 @@ import numpy.testing as nptest
 
 class TestImagesLoader(TestBase):
     def test_loading(self):
-        test_images_loader = ImagesLoader(self.test_dir("input/lights"))
+        test_images_loader = ImagesLoader(self.root_test_dir("input/lights"))
         self.assertEqual(2, len(test_images_loader))
         self.assertEqual(['lights01', 'lights02'], test_images_loader.input_order)
 
@@ -31,14 +31,14 @@ class TestImagesLoader(TestBase):
         self.assertEqual(0, tag_1["id"])  # TODO RETHINK default tags mirror exact call
 
     def test_get_element(self):
-        test_images_loader = ImagesLoader(self.test_dir("input/lights"))
+        test_images_loader = ImagesLoader(self.root_test_dir("input/lights"))
         second_elem = test_images_loader[1]
         self.assertIn("image", second_elem)
         self.assertIn("annotation", second_elem)
         self.assertIn("tag", second_elem)
 
     def test_iterate_through(self):
-        test_images_loader = ImagesLoader(self.test_dir("input/lights"))
+        test_images_loader = ImagesLoader(self.root_test_dir("input/lights"))
         data = [p for p in test_images_loader]
         self.assertEqual(2, len(data))
         second_elem = data[1]
