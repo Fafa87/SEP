@@ -1,11 +1,9 @@
+import numpy.testing as nptest
 import os
-
-import pathlib
 import unittest
 
-from tests.testbase import TestBase
 from sep.loaders.images import ImagesLoader
-import numpy.testing as nptest
+from tests.testbase import TestBase
 
 
 class TestImagesLoader(TestBase):
@@ -55,7 +53,6 @@ class TestImagesLoader(TestBase):
         self.assertEqual("human_1", data_names[0])
         self.assertEqual(os.path.join("humans", "human_1.tif"), test_images_loader.get_relative_path(0))
         self.assertEqual(os.path.join("humans", "human_1.tif"), test_images_loader.get_relative_path("human_1"))
-
 
 
 if __name__ == '__main__':
