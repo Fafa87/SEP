@@ -1,8 +1,7 @@
-import os
-
 import imageio
 import json
 import numpy as np
+import os
 import pathlib
 
 import sep.loaders.images
@@ -14,13 +13,17 @@ class ImagesSaver(Saver):
     Save results for images from ImagesLoader in the same hierarchy as the loader.
     """
 
-    def __init__(self, output_root, loader: sep.loaders.images.ImagesLoader, image_format=".png",
+    def __init__(self, output_root='.', loader: sep.loaders.images.ImagesLoader = None, image_format=".png",
                  verbose=0, ignore_dtype=False):
         super().__init__()
         self.ignore_dtype = ignore_dtype
         self.image_format = image_format
         self.loader = loader
         self.verbose = verbose
+        self.output_root = pathlib.Path(output_root)
+
+    def set_output(self, output_root, loader: sep.loaders.images.ImagesLoader):
+        self.loader = loader
         self.output_root = pathlib.Path(output_root)
 
     def save_result(self, name_or_num, result: np.ndarray, ignore_dtype=None):

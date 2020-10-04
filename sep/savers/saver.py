@@ -2,10 +2,16 @@ from abc import ABC, abstractmethod
 
 import numpy as np
 
+import sep.loaders.loader
+
 
 class Saver(ABC):
     def __init__(self):
         self.annotator = None
+        pass
+
+    @abstractmethod
+    def set_output(self, output_root, loader: sep.loaders.loader.Loader):
         pass
 
     @abstractmethod
