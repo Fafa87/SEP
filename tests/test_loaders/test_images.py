@@ -1,9 +1,9 @@
-import pathlib
+import numpy.testing as nptest
+import os
 import unittest
 
-from tests.testbase import TestBase
 from sep.loaders.images import ImagesLoader
-import numpy.testing as nptest
+from tests.testbase import TestBase
 
 
 class TestImagesLoader(TestBase):
@@ -45,6 +45,14 @@ class TestImagesLoader(TestBase):
         self.assertIn("image", second_elem)
         self.assertIn("annotation", second_elem)
         self.assertIn("tag", second_elem)
+
+    def test_relative(self):
+        test_images_loader = ImagesLoader(self.root_test_dir("input"))
+        data_names = test_images_loader.list_images()
+        self.assertEqual(5, len(data_names))
+        self.assertEqual("human_1", data_names[0])
+        self.assertEqual(os.path.join("humans", "human_1.tif"), test_images_loader.get_relative_path(0))
+        self.assertEqual(os.path.join("humans", "human_1.tif"), test_images_loader.get_relative_path("human_1"))
 
 
 if __name__ == '__main__':

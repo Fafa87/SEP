@@ -99,6 +99,10 @@ class ImagesLoader(Loader):
             assert "id" in tag
             return tag
 
+    def get_relative_path(self, name_or_num):
+        path_to_file = self.__get_file_path(self.input_images, name_or_num)
+        return os.path.relpath(path_to_file, self.data_root)
+
     def load_annotation(self, name_or_num):
         path_to_file = self.__get_file_path(self.annotation_images, name_or_num)
         if path_to_file is None:
