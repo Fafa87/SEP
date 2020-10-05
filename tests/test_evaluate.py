@@ -12,12 +12,12 @@ import tests.testbase
 
 
 class TestEvaluate(tests.testbase.TestBase):
-    class Threshold(sep.producers.producer.Producer):
+    class Threshold(sep.producers.ImagesProducer):
         def __init__(self, name, channel, cache_root):
             super().__init__(name=name, cache_root=cache_root)
             self.channel = channel
 
-        def segmentation(self, image):
+        def segmentation(self, image, image_tag):
             return image[..., self.channel] > 200
 
     def test_evaluate_simple(self):

@@ -3,13 +3,13 @@ import unittest
 import numpy as np
 import numpy.testing as nptest
 
-import sep.producers.producer
+import sep.producers
 import tests.testbase
 
 
 class TestProducer(tests.testbase.TestBase):
-    class Threshold(sep.producers.producer.Producer):
-        def segmentation(self, image):
+    class Threshold(sep.producers.ImagesProducer):
+        def segmentation(self, image, image_tag):
             return image > 128
 
     def test_producer_calculate(self):
