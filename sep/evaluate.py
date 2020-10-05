@@ -7,7 +7,7 @@ from tqdm import tqdm
 
 from sep.assessors.detailer import Detailer
 from sep.assessors.metricer import Metricer
-from sep.loaders.loader import Loader
+from sep.loaders import Loader
 from sep.producers.producer import Producer
 
 

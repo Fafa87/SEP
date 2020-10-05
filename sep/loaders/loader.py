@@ -1,4 +1,7 @@
+import pathlib
+
 from abc import ABC, abstractmethod
+import typing as t
 
 import numpy as np
 
@@ -13,7 +16,7 @@ class Loader(ABC):
         pass
 
     @abstractmethod
-    def load_image(self, name_or_num):
+    def load_image(self, name_or_num) -> t.Union[np.ndarray, pathlib.Path]:
         pass
 
     @abstractmethod
@@ -21,7 +24,7 @@ class Loader(ABC):
         pass
 
     @abstractmethod
-    def load_annotation(self, name_or_num):
+    def load_annotation(self, name_or_num) -> t.Union[np.ndarray, pathlib.Path]:
         pass
 
     def save_annotation(self, name_or_num, new_annotation, keep_history=False):
