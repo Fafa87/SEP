@@ -27,6 +27,10 @@ class TestBase(unittest.TestCase):
         self.to_clear.append(path)
         return open(path, "w")
 
+    def add_temp(self, path):
+        self.to_clear.append(path)
+        return path
+
     def root_test_dir(self, *path_components):
         return str(pathlib.Path(__file__).parent.joinpath(*path_components))
 
@@ -43,4 +47,4 @@ class TestBase(unittest.TestCase):
         image[top: bottom + 1, left: right + 1] = value
 
     def random_rgb(self, shape2d):
-        return np.random.random(shape2d + (3,)).astype(np.uint8)
+        return (np.random.random(shape2d + (3,)) * 255).astype(np.uint8)
