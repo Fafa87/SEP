@@ -1,4 +1,5 @@
 import traceback
+import typing as t
 
 import cv2
 import numpy as np
@@ -20,6 +21,32 @@ class StreamReader:
                 print(f"Failed to get frame nr {i}.")
             yield image[..., ::-1]  # make it RGB
 
+    def read_samples(self, sampling_framerate: float) -> t.Iterable[np.ndarray]:
+        current_time = 0
+        next_sample_time = 0
+        sampling_interval = 1.0 / sampling_framerate
+        self.reader.set(cv2.CAP_PROP_POS_FRAMES, 0)
+        for i in range(self.frame_num):
+            res, image = self.reader.read()
+            if not res:
+                print(f"Failed to get frame nr {i}.")
+            if next_sample_time <= current_time:
+                yield image[..., ::-1]  # make it RGB
+                next_sample_time += sampling_interval
+            current_time += self.frame_interval
+
+    def pos_samples(self, sampling_framerate: float) -> t.List[int]:
+        res = []
+        current_time = 0
+        next_sample_time = 0
+        sampling_interval = 1.0 / sampling_framerate
+        for i in range(self.frame_num):
+            if next_sample_time <= current_time:
+                res.append(i)
+                next_sample_time += sampling_interval
+            current_time += self.frame_interval
+        return res
+
     def __getitem__(self, item):
         self.reader.set(cv2.CAP_PROP_POS_FRAMES, item)
         res, image = self.reader.read()
@@ -37,6 +64,7 @@ class StreamReader:
     def __enter__(self):
         self.reader = cv2.VideoCapture(self.input_string)
         self.frame_rate = int(self.reader.get(cv2.CAP_PROP_FPS))
+        self.frame_interval = 1.0 / self.frame_rate
         self.frame_h = int(self.reader.get(cv2.CAP_PROP_FRAME_HEIGHT))
         self.frame_w = int(self.reader.get(cv2.CAP_PROP_FRAME_WIDTH))
         self.frame_num = int(self.reader.get(cv2.CAP_PROP_FRAME_COUNT))
