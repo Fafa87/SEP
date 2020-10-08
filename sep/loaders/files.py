@@ -46,9 +46,9 @@ class FilesLoader(Loader):
         input_images_paths = [f for f in all_files
                               if f.suffix in self.input_extensions and not f.stem.endswith(annotation_suffix)]
 
-        self.input_images = {self.path_to_id(p): p for p in input_images_paths}
-        self.input_order = sorted(self.input_images.keys())
-        self.annotation_images = {}
+        self.input_paths = {self.path_to_id(p): p for p in input_images_paths}
+        self.input_order = sorted(self.input_paths.keys())
+        self.annotation_paths = {}
         self.json_tags = {}
         for input_path in input_images_paths:
             if self.annotation_for_image_finder:
@@ -56,15 +56,15 @@ class FilesLoader(Loader):
             else:
                 annotation_path = input_path.with_name(input_path.stem + annotation_suffix + annotation_extension)
             if os.path.isfile(annotation_path):
-                self.annotation_images[self.path_to_id(input_path)] = annotation_path
+                self.annotation_paths[self.path_to_id(input_path)] = annotation_path
 
             json_path = input_path.with_suffix(".json")
             if os.path.isfile(json_path):
                 self.json_tags[self.path_to_id(input_path)] = json_path
 
         if verbose:
-            print(f"Found {len(self.input_images)} images.")
-            print(f"Found {len(self.annotation_images)} annotations.")
+            print(f"Found {len(self.input_paths)} images.")
+            print(f"Found {len(self.annotation_paths)} annotations.")
             print(f"Found {len(self.json_tags)} tags.")
 
 
@@ -75,7 +75,7 @@ class FilesLoader(Loader):
         return list(self.input_order)
 
     def list_images_paths(self):
-        return [self.input_images[p] for p in self.input_order]
+        return [self.input_paths[p] for p in self.input_order]
 
     def __get_file_path(self, path_set, name_or_num):
         if isinstance(name_or_num, int):
@@ -86,7 +86,7 @@ class FilesLoader(Loader):
             raise NotImplemented(type(name_or_num))
 
     def load_image(self, name_or_num) -> pathlib.Path:
-        path_to_file = self.__get_file_path(self.input_images, name_or_num)
+        path_to_file = self.__get_file_path(self.input_paths, name_or_num)
         return path_to_file
 
     def load_tag(self, name_or_num):
@@ -100,11 +100,11 @@ class FilesLoader(Loader):
             return tag
 
     def get_relative_path(self, name_or_num):
-        path_to_file = self.__get_file_path(self.input_images, name_or_num)
+        path_to_file = self.__get_file_path(self.input_paths, name_or_num)
         return os.path.relpath(path_to_file, self.data_root)
 
     def load_annotation(self, name_or_num) -> t.Optional[pathlib.Path]:
-        path_to_file = self.__get_file_path(self.annotation_images, name_or_num)
+        path_to_file = self.__get_file_path(self.annotation_paths, name_or_num)
         if path_to_file is None:
             return None
         return path_to_file

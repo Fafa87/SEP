@@ -1,11 +1,10 @@
-import imageio
-import numpy as np
 import pathlib
 import typing as t
 
 import sep._commons.movies
-from sep.loaders.loader import Loader
+from sep._commons.utils import *
 from sep.loaders.files import FilesLoader
+from sep.loaders.loader import Loader
 
 
 class MoviesLoader(Loader):
@@ -25,6 +24,7 @@ class MoviesLoader(Loader):
                  annotation_for_movie_finder: t.Callable[[pathlib.Path], str] = None, verbose=0):
         super().__init__()
         input_extensions = input_extensions or ['.mov', '.mp4', '.mpg', '.avi']
+        self.data_root = data_root
         self.files_loader = FilesLoader(data_root, input_extensions=input_extensions,
                                         annotation_extension='.mp4',
                                         annotation_for_image_finder=annotation_for_movie_finder,
@@ -32,13 +32,40 @@ class MoviesLoader(Loader):
         self.clips_skip = clips_skip
         self.clips_len = clips_len
         self.framerate = framerate
-        self.video_reader = None
+        self.video_image_reader = None
+        self.video_annotation_reader = None
 
-        self.input_images = {}  # self.path_to_id(p): p for p in input_images_paths}
-        #self.input_order = sorted(self.input_images.keys())
-        self.annotation_images = {}
+        self.input_paths = {}
+        self.annotation_paths = {}
         self.json_tags = {}
 
+        for movie_path in self.list_movies_paths():
+            movie_id = self.files_loader.path_to_id(movie_path)
+            annotation_path = self.files_loader.load_annotation(movie_id)
+            movie_tag = self.files_loader.load_tag(movie_id)
+
+            # Process input data movies.
+            movie_frames = MoviesLoader.load_movie_images(movie_path, self.framerate,
+                                                          clips_len=self.clips_len, clips_skip=self.clips_skip)
+            for frame_id, tag in zip(movie_frames['images'], movie_frames['tags']):
+                frame_path = f"{movie_path}_{frame_id}"
+                frame_id = f"{movie_id}_{frame_id}"
+                tag['id'] = frame_id
+                update_with_suffix(tag, movie_tag, prefix="movie_")
+
+                self.input_paths[frame_id] = frame_path
+                self.json_tags[frame_id] = tag
+
+            # Process annotation movies.
+            if annotation_path:
+                annotation_frames = MoviesLoader.load_movie_images(annotation_path, self.framerate,
+                                                                   clips_len=self.clips_len, clips_skip=self.clips_skip)
+                for annotation_id in annotation_frames['images']:
+                    annotation_path = f"{movie_path}_{annotation_id}"
+                    annotation_id = f"{movie_id}_{annotation_id}"
+                    self.annotation_paths[annotation_id] = annotation_path
+
+        self.input_order = sorted(self.input_paths.keys())
 
     def list_movies(self):
         return self.files_loader.list_images()
@@ -47,8 +74,12 @@ class MoviesLoader(Loader):
         return self.files_loader.list_images_paths()
 
     def close(self):
-        if self.video_reader:
-            self.video_reader.release()
+        if self.video_image_reader:
+            self.video_image_reader.release()
+            self.video_image_reader = None
+        if self.video_annotation_reader:
+            self.video_annotation_reader.release()
+            self.video_annotation_reader = None
 
     @staticmethod
     def load_movie_images(movie_path, framerate: t.Optional[float], clips_len, clips_skip) -> dict:
@@ -71,6 +102,47 @@ class MoviesLoader(Loader):
                 clip_nr += 1
         return {'images': images, 'tags': tags}
 
+    def list_images_paths(self):
+        return [self.input_paths[p] for p in self.input_order]
+
+    def list_images(self):
+        return list(self.input_order)
+
+    def path_to_id(self, path):
+        return path.stem  # TODO this may not be unique
+
+    def __get_frame_path(self, path_set, name_or_num):
+        if isinstance(name_or_num, int):
+            name_or_num = self.input_order[name_or_num]
+        if isinstance(name_or_num, str):
+            return path_set.get(name_or_num, None)
+        else:
+            raise NotImplemented(type(name_or_num))
+
+    def load_image(self, name_or_num) -> pathlib.Path:
+        path_to_frame = self.__get_frame_path(self.input_paths, name_or_num)
+        path_to_movie, frame_nr = path_to_frame.rsplit("_", maxsplit=1)
+        # TODO read from reader
+
+        return None #path_to_file
+
+    def load_tag(self, name_or_num):
+        if isinstance(name_or_num, int):
+            name_or_num = self.input_order[name_or_num]
+        return self.json_tags.get(name_or_num, None)
+
+    def load_annotation(self, name_or_num) -> t.Optional[pathlib.Path]:
+        path_to_frame = self.__get_frame_path(self.annotation_paths, name_or_num)
+        if path_to_frame is None:
+            return None
+        # TODO read from reader
+        path_to_movie, frame_nr = path_to_frame.rsplit("_", maxsplit=1)
+
+        return None
+
+    # def get_relative_path(self, name_or_num):
+    #     path_to_file = self.__get_file_path(self.input_paths, name_or_num)
+    #     return os.path.relpath(path_to_file, self.data_root)
 
     def __str__(self):
         return f"MovieLoader for: {self.data_root}"

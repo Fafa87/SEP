@@ -10,7 +10,7 @@ from sep._commons import imgutil
 class StreamReader:
     def __init__(self, input_string):
         # TODO option to read from camera?
-        self.input_string = input_string
+        self.input_string = str(input_string)
         self.frame_num = None
 
     def __iter__(self):
