@@ -1,11 +1,10 @@
+import imageio
+import numpy as np
 import os
 import pathlib
 import shutil
-import unittest
 import tempfile
-
-import imageio
-import numpy as np
+import unittest
 
 
 class TestBase(unittest.TestCase):
@@ -27,6 +26,10 @@ class TestBase(unittest.TestCase):
         self.to_clear.append(path)
         return open(path, "w")
 
+    def add_temp(self, path):
+        self.to_clear.append(path)
+        return path
+
     def root_test_dir(self, *path_components):
         return str(pathlib.Path(__file__).parent.joinpath(*path_components))
 
@@ -34,6 +37,15 @@ class TestBase(unittest.TestCase):
         temp_dir = tempfile.mkdtemp()
         self.to_clear.append(temp_dir)
         return temp_dir
+
+    def assertArray(self, array: np.ndarray, dims, dtype):
+        self.assertEqual(dims, array.ndim)
+        self.assertEqual(dtype, array.dtype)
+
+    def assertSubset(self, dictionary: dict, subset: dict):
+        for k, v in subset.items():
+            self.assertIn(k, dictionary)
+            self.assertEqual(v, dictionary[k])
 
     def draw_cell(self, image, position, radius, value):
         left = max(0, position[0] - radius)
@@ -43,4 +55,11 @@ class TestBase(unittest.TestCase):
         image[top: bottom + 1, left: right + 1] = value
 
     def random_rgb(self, shape2d):
-        return np.random.random(shape2d + (3,)).astype(np.uint8)
+        return (np.random.random(shape2d + (3,)) * 255).astype(np.uint8)
+
+    def np_assert_not_equal(self, expected, actual):
+        with np.testing.assert_raises(AssertionError):
+            np.testing.assert_array_equal(expected, actual)
+
+    def np_assert_equal(self, expected, actual):
+        np.testing.assert_array_equal(expected, actual)

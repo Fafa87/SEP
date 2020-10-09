@@ -7,8 +7,8 @@ from tqdm import tqdm
 
 from sep.assessors.detailer import Detailer
 from sep.assessors.metricer import Metricer
-from sep.loaders.loader import Loader
-from sep.producers.producer import Producer
+from sep.loaders import Loader
+from sep.producers import Producer
 
 
 def evaluate(data_loader: Loader, producer: Producer, metricer: Metricer,

@@ -1,14 +1,14 @@
-import unittest
-
 import numpy as np
 import numpy.testing as nptest
+import unittest
 
 from sep.assessors.metricer import Metricer
 from sep.assessors.metrics import IouMetric
 from sep.assessors.regions import Region, EntireRegion, EdgesRegion, DetailsRegion
+from tests.testbase import TestBase
 
 
-class TestMetrics(unittest.TestCase):
+class TestMetrics(TestBase):
     def test_iou(self):
         iou = IouMetric()
         blob_1 = np.zeros((10, 10))
@@ -21,7 +21,7 @@ class TestMetrics(unittest.TestCase):
         self.assertAlmostEqual(5.0 / (50 + 5), metric, places=5)
 
 
-class TestRegions(unittest.TestCase):
+class TestRegions(TestBase):
     def test_entire(self):
         entire_region = EntireRegion()
         blob_1 = np.zeros((10, 10))
@@ -60,7 +60,7 @@ class TestRegions(unittest.TestCase):
         some_region = details_region_float.regionize(blob_2, blob_1)
 
 
-class TestMetricer(unittest.TestCase):
+class TestMetricer(TestBase):
     class DummyRegion(Region):
         def extract_region(self, ground_truth: np.ndarray) -> np.ndarray:
             return ground_truth.astype(np.bool)

@@ -4,7 +4,7 @@ import unittest
 import numpy as np
 import numpy.testing as nptest
 
-from sep.loaders.images import ImagesLoader
+from sep.loaders import ImagesLoader
 from sep.savers.images import ImagesSaver
 from tests.testbase import TestBase
 

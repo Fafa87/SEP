@@ -15,5 +15,6 @@ dependencies:
   - notebook
   - jupyter_contrib_nbextensions
   - scikit-image
+  - opencv
 prefix: C:\Users\Fafa\miniconda3\envs\sep_3_6
 
