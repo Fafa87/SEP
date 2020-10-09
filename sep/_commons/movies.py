@@ -14,12 +14,7 @@ class StreamReader:
         self.frame_num = None
 
     def __iter__(self):
-        self.reader.set(cv2.CAP_PROP_POS_FRAMES, 0)
-        for i in range(self.frame_num):
-            res, image = self.reader.read()
-            if not res:
-                print(f"Failed to get frame nr {i}.")
-            yield image[..., ::-1]  # make it RGB
+        return self.read_samples(self.frame_rate)
 
     def read_samples(self, sampling_framerate: float) -> t.Iterable[np.ndarray]:
         current_time = 0
@@ -73,7 +68,11 @@ class StreamReader:
     def __exit__(self, exc_type, exc_value, tb):
         if exc_type is not None:
             traceback.print_exception(exc_type, exc_value, tb)
-        self.reader.release()
+        self.close()
+
+    def close(self):
+        if self.reader is not None:
+            self.reader.release()
 
 
 class VideoWriter:

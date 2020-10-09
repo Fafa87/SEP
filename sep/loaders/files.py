@@ -46,7 +46,7 @@ class FilesLoader(Loader):
         input_images_paths = [f for f in all_files
                               if f.suffix in self.input_extensions and not f.stem.endswith(annotation_suffix)]
 
-        self.input_paths = {self.path_to_id(p): p for p in input_images_paths}
+        self.input_paths = {self.path_to_id(p): p for p in input_images_paths}  # this will check if there are duplicates
         self.input_order = sorted(self.input_paths.keys())
         self.annotation_paths = {}
         self.json_tags = {}
@@ -69,7 +69,7 @@ class FilesLoader(Loader):
 
 
     def path_to_id(self, path):
-        return path.stem  # TODO this may not be unique
+        return path.stem  # TODO this may not be unique, we may use ids from tags instead
 
     def list_images(self):
         return list(self.input_order)

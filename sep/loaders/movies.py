@@ -1,7 +1,9 @@
+import traceback
+
 import pathlib
 import typing as t
 
-import sep._commons.movies
+from sep._commons.movies import StreamReader
 from sep._commons.utils import *
 from sep.loaders.files import FilesLoader
 from sep.loaders.loader import Loader
@@ -32,8 +34,8 @@ class MoviesLoader(Loader):
         self.clips_skip = clips_skip
         self.clips_len = clips_len
         self.framerate = framerate
-        self.video_image_reader = None
-        self.video_annotation_reader = None
+        self.video_image_reader: t.Optional[StreamReader] = None
+        self.video_annotation_reader: t.Optional[StreamReader] = None
 
         self.input_paths = {}
         self.annotation_paths = {}
@@ -48,8 +50,8 @@ class MoviesLoader(Loader):
             movie_frames = MoviesLoader.load_movie_images(movie_path, self.framerate,
                                                           clips_len=self.clips_len, clips_skip=self.clips_skip)
             for frame_id, tag in zip(movie_frames['images'], movie_frames['tags']):
-                frame_path = f"{movie_path}_{frame_id}"
-                frame_id = f"{movie_id}_{frame_id}"
+                frame_path = f"{movie_path}{frame_id}"
+                frame_id = f"{movie_id}{frame_id}"
                 tag['id'] = frame_id
                 update_with_suffix(tag, movie_tag, prefix="movie_")
 
@@ -61,8 +63,8 @@ class MoviesLoader(Loader):
                 annotation_frames = MoviesLoader.load_movie_images(annotation_path, self.framerate,
                                                                    clips_len=self.clips_len, clips_skip=self.clips_skip)
                 for annotation_id in annotation_frames['images']:
-                    annotation_path = f"{movie_path}_{annotation_id}"
-                    annotation_id = f"{movie_id}_{annotation_id}"
+                    annotation_path = f"{movie_path}{annotation_id}"
+                    annotation_id = f"{movie_id}{annotation_id}"
                     self.annotation_paths[annotation_id] = annotation_path
 
         self.input_order = sorted(self.input_paths.keys())
@@ -73,19 +75,27 @@ class MoviesLoader(Loader):
     def list_movies_paths(self):
         return self.files_loader.list_images_paths()
 
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_value, tb):
+        if exc_type is not None:
+            traceback.print_exception(exc_type, exc_value, tb)
+        self.close()
+
     def close(self):
         if self.video_image_reader:
-            self.video_image_reader.release()
+            self.video_image_reader.close()
             self.video_image_reader = None
         if self.video_annotation_reader:
-            self.video_annotation_reader.release()
+            self.video_annotation_reader.close()
             self.video_annotation_reader = None
 
     @staticmethod
     def load_movie_images(movie_path, framerate: t.Optional[float], clips_len, clips_skip) -> dict:
         images = []
         tags = []
-        with sep._commons.movies.StreamReader(movie_path) as video_reader:
+        with StreamReader(movie_path) as video_reader:
             framerate = framerate or video_reader.frame_rate
             samples = list(video_reader.pos_samples(framerate))
             clip_nr = 0
@@ -94,8 +104,8 @@ class MoviesLoader(Loader):
                 del samples[:clips_len + clips_skip]
 
                 images += [f"_{c:05}" for c in clip]
-                for c in clip:
-                    tag = {"id": f"_{c:05}", "pos": c, "clip_nr": clip_nr,
+                for i_c, c in enumerate(clip):
+                    tag = {"id": f"_{c:05}", "pos": c, "pos_clip": i_c, "clip_nr": clip_nr,
                            "timestamp": c * video_reader.frame_interval}
                     tags.append(tag)
 
@@ -121,10 +131,14 @@ class MoviesLoader(Loader):
 
     def load_image(self, name_or_num) -> pathlib.Path:
         path_to_frame = self.__get_frame_path(self.input_paths, name_or_num)
+        if path_to_frame is None:
+            raise Exception(f"{name_or_num} does not exist in the loader.")
         path_to_movie, frame_nr = path_to_frame.rsplit("_", maxsplit=1)
-        # TODO read from reader
-
-        return None #path_to_file
+        if self.video_image_reader is not None and self.video_image_reader.input_string != path_to_movie:
+            self.video_image_reader.close()
+        self.video_image_reader = StreamReader(path_to_movie)
+        self.video_image_reader.__enter__()
+        return self.video_image_reader[int(frame_nr)]
 
     def load_tag(self, name_or_num):
         if isinstance(name_or_num, int):

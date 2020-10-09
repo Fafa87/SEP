@@ -1,11 +1,10 @@
+import imageio
+import numpy as np
 import os
 import pathlib
 import shutil
-import unittest
 import tempfile
-
-import imageio
-import numpy as np
+import unittest
 
 
 class TestBase(unittest.TestCase):
@@ -39,6 +38,15 @@ class TestBase(unittest.TestCase):
         self.to_clear.append(temp_dir)
         return temp_dir
 
+    def assertArray(self, array: np.ndarray, dims, dtype):
+        self.assertEqual(dims, array.ndim)
+        self.assertEqual(dtype, array.dtype)
+
+    def assertSubset(self, dictionary: dict, subset: dict):
+        for k, v in subset.items():
+            self.assertIn(k, dictionary)
+            self.assertEqual(v, dictionary[k])
+
     def draw_cell(self, image, position, radius, value):
         left = max(0, position[0] - radius)
         top = max(0, position[1] - radius)
@@ -48,3 +56,10 @@ class TestBase(unittest.TestCase):
 
     def random_rgb(self, shape2d):
         return (np.random.random(shape2d + (3,)) * 255).astype(np.uint8)
+
+    def np_assert_not_equal(self, expected, actual):
+        with np.testing.assert_raises(AssertionError):
+            np.testing.assert_array_equal(expected, actual)
+
+    def np_assert_equal(self, expected, actual):
+        np.testing.assert_array_equal(expected, actual)
