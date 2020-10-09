@@ -7,3 +7,7 @@ Semantic Evaluation Platform
 [![PyPI version](https://img.shields.io/pypi/v/semevalplatform.svg)](https://pypi.org/project/semevalplatform/)
 [![PyPi](https://img.shields.io/pypi/pyversions/semevalplatform)](https://pypi.org/project/semevalplatform/)
 ![Platform](https://img.shields.io/badge/platform-windows%20%7C%20osx%20%7C%20ubuntu-lightgrey)
+
+## Instalation
+
+`pip install semevalplatform`
