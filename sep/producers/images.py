@@ -45,6 +45,9 @@ class ImagesProducer(Producer, ABC):
         assert input_image.dtype == np.uint8
 
         seg, seg_tag = super().calculate(input_image, input_tag)
+        # TODO what if the seg is not uint8? What if it is not mask? What if it is predictions as floats?
+        if isinstance(seg, np.ndarray) and seg.dtype == np.bool:
+            seg = seg.astype(np.uint8)
 
         if self.cache_root and "id" in input_tag:
             self.__save_tag(input_tag["id"], seg_tag)
