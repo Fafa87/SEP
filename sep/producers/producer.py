@@ -30,8 +30,6 @@ class Producer(ABC):
             -> (t.Union[np.ndarray, pathlib.Path], dict):
         start_time = timer()
         seg = self.segmentation(input_data, input_tag)
-        if isinstance(seg, np.ndarray):
-            seg = seg.astype(np.uint8)
 
         seg_tag = {}
         prediction_time = timer() - start_time
