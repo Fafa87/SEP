@@ -2,6 +2,7 @@ import traceback
 
 import pathlib
 import typing as t
+import numpy as np
 
 from sep._commons.movies import StreamReader
 from sep._commons.utils import *
@@ -129,7 +130,7 @@ class MoviesLoader(Loader):
         else:
             raise NotImplemented(type(name_or_num))
 
-    def load_image(self, name_or_num) -> pathlib.Path:
+    def load_image(self, name_or_num) -> np.ndarray:
         path_to_frame = self.__get_frame_path(self.input_paths, name_or_num)
         if path_to_frame is None:
             raise Exception(f"{name_or_num} does not exist in the loader.")
