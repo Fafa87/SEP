@@ -39,7 +39,7 @@ setuptools.setup(
         "notebook",
         "jupyter_contrib_nbextensions",
         "scikit-image",
-        "opencv",
+        "opencv-python",
         "pafy",
         "youtube_dl"
     ],
