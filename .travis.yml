@@ -24,5 +24,6 @@ install:
   - conda env update -n test-environment --file environment.yml
   - conda activate test-environment
   - python3 setup.py install
+  - pip3 install imagecodecs
 script:
   - python3 -m pytest

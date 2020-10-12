@@ -4,6 +4,7 @@ channels:
   - defaults
 dependencies:
   - python=3.6
+  - pip
   - numpy
   - fire
   - imageio
@@ -16,5 +17,8 @@ dependencies:
   - jupyter_contrib_nbextensions
   - scikit-image
   - opencv
+  - pip:
+    - pafy
+    - youtube_dl
 prefix: C:\Users\Fafa\miniconda3\envs\sep_3_6
 

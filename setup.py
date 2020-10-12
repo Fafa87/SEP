@@ -37,7 +37,11 @@ setuptools.setup(
         "pandas",
         "matplotlib",
         "notebook",
-        "jupyter_contrib_nbextensions"
+        "jupyter_contrib_nbextensions",
+        "scikit-image",
+        "opencv",
+        "pafy",
+        "youtube_dl"
     ],
     url="https://github.com/Fafa87/SEP",
     version=version
