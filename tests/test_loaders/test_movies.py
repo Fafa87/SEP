@@ -1,8 +1,7 @@
 import itertools
-import unittest
-
 import numpy as np
-import numpy.testing as nptest
+import os
+import unittest
 
 from sep.loaders import MoviesLoader
 from tests.testbase import TestBase
@@ -33,7 +32,7 @@ class TestMoviesLoader(TestBase):
             image_2 = test_movies_loader.load_image('Dinosaur - 1438_00037')
             self.assertArray(image_2, 3, np.uint8)
             self.assertIsNone(annotation_2)
-            self.assertSubset(tag_2, {'id': 'Dinosaur - 1438_00037', 'pos': 37,  'pos_clip': 1, 'clip_nr': 1})
+            self.assertSubset(tag_2, {'id': 'Dinosaur - 1438_00037', 'pos': 37, 'pos_clip': 1, 'clip_nr': 1})
             self.assertAlmostEqual(1.608, tag_2['timestamp'], places=2)
             self.assertSubset(tag_2, {'movie_id': 'dinosaur_1', 'movie_source': 'pixabay', 'movie_type': 'running'})
 
@@ -93,6 +92,16 @@ class TestMoviesLoader(TestBase):
         self.assertEqual('_00012', loaded_tags[2]['id'])
         self.assertEqual(12, loaded_tags[2]['pos'])
         self.assertEqual(1, loaded_tags[2]['clip_nr'])
+
+    def test_relative(self):
+        with MoviesLoader(self.root_test_dir("input/reptiles"),
+                          framerate=5, clips_len=1, clips_skip=10) as movies_loader:
+            data_names = movies_loader.list_images()
+            self.assertEqual(9, len(data_names))
+            self.assertEqual("Dinosaur - 1438_00000", data_names[0])
+            self.assertEqual(os.path.join("dinosaur_1", "Dinosaur - 1438_00000"), movies_loader.get_relative_path(0))
+            self.assertEqual(os.path.join("dinosaur_1", "Dinosaur - 1438_00000"),
+                             movies_loader.get_relative_path("Dinosaur - 1438_00000"))
 
 
 if __name__ == '__main__':

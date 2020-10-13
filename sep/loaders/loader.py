@@ -27,6 +27,10 @@ class Loader(ABC):
     def load_annotation(self, name_or_num) -> t.Union[np.ndarray, pathlib.Path]:
         pass
 
+    @abstractmethod
+    def get_relative_path(self, name_or_num):
+        pass
+
     def save_annotation(self, name_or_num, new_annotation, keep_history=False):
         pass
 

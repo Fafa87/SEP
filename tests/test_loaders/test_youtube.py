@@ -1,5 +1,6 @@
 import itertools
 import numpy as np
+import os
 import unittest
 
 from sep.loaders import YoutubeLoader
@@ -40,6 +41,16 @@ class TestYoutubeLoader(TestBase):
                 self.assertSubset(tag, {'movie_id': '_cLFseR-S50', 'movie_title': 'Slipknot - Snuff (Violet Orlandi cover)',
                                         'movie_author': 'Violet Orlandi'})
                 return
+
+    def test_relative(self):
+        with YoutubeLoader(['https://www.youtube.com/watch?v=_cLFseR-S50'], '720p',
+                           framerate=5, clips_len=1, clips_skip=10) as youtube_loader:
+            data_names = youtube_loader.list_images()
+            self.assertEqual(122, len(data_names))
+            self.assertEqual("_cLFseR-S50_00000", data_names[0])
+            self.assertEqual(os.path.join("_cLFseR-S50", "_cLFseR-S50_00000"), youtube_loader.get_relative_path(0))
+            self.assertEqual(os.path.join("_cLFseR-S50", "_cLFseR-S50_00000"),
+                             youtube_loader.get_relative_path("_cLFseR-S50_00000"))
 
 
 if __name__ == '__main__':
