@@ -26,7 +26,8 @@ setuptools.setup(
     packages=setuptools.find_packages(exclude=[
         "tests", "examples"
     ]),
-    setup_requires=[
+    install_requires=[
+        "pip"
         "pytest",
         "numpy",
         "fire",
