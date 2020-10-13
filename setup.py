@@ -27,8 +27,6 @@ setuptools.setup(
         "tests", "examples"
     ]),
     install_requires=[
-        "pip"
-        "pytest",
         "numpy",
         "fire",
         "imageio",
