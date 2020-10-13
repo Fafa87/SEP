@@ -1,9 +1,10 @@
 import traceback
 
+import numpy as np
+import os
 import pafy
 import pathlib
 import typing as t
-import numpy as np
 
 import sep.loaders
 from sep._commons.movies import StreamReader
@@ -16,10 +17,12 @@ class YoutubeLoader(Loader):
     This one loads frames from youtube video and tags them so that can be used in processing or in dataset extraction.
     """
 
-    def __init__(self, urls, video_quality, framerate, clips_len, clips_skip, verbose=0):
+    def __init__(self, urls, video_quality, framerate, clips_len, clips_skip, skip_first=0, max_frames=1000000, verbose=0):
         super().__init__()
         self.verbose = verbose
         self.video_quality = video_quality
+        self.max_frames = max_frames
+        self.skip_first = skip_first
         self.youtube_urls = urls
         self.direct_urls = {}
 
@@ -48,7 +51,14 @@ class YoutubeLoader(Loader):
             # Process input data movies.
             movie_frames = sep.loaders.MoviesLoader.load_movie_images(movie_path, self.framerate,
                                                                       clips_len=self.clips_len, clips_skip=self.clips_skip)
+            frame_from_that_movie = 0
+            left_to_skip = self.skip_first
             for frame_id, tag in zip(movie_frames['images'], movie_frames['tags']):
+                if left_to_skip > 0:
+                    left_to_skip -= 1
+                    continue
+                if frame_from_that_movie >= self.max_frames:
+                    continue
                 frame_path = f"{movie_path}{frame_id}"
                 frame_id = f"{movie_id}{frame_id}"
                 tag['id'] = frame_id
@@ -56,6 +66,7 @@ class YoutubeLoader(Loader):
 
                 self.input_paths[frame_id] = frame_path
                 self.json_tags[frame_id] = tag
+                frame_from_that_movie += 1
 
         self.input_order = sorted(self.input_paths.keys())
 
@@ -84,9 +95,6 @@ class YoutubeLoader(Loader):
     def list_images(self):
         return list(self.input_order)
 
-    def path_to_id(self, path):
-        return path.stem  # TODO this may not be unique
-
     def __get_frame_path(self, path_set, name_or_num):
         if isinstance(name_or_num, int):
             name_or_num = self.input_order[name_or_num]
@@ -100,10 +108,7 @@ class YoutubeLoader(Loader):
         if path_to_frame is None:
             raise Exception(f"{name_or_num} does not exist in the loader.")
         path_to_movie, frame_nr = path_to_frame.rsplit("_", maxsplit=1)
-        if self.video_image_reader is not None and self.video_image_reader.input_string != path_to_movie:
-            self.video_image_reader.close()
-        self.video_image_reader = StreamReader(path_to_movie)
-        self.video_image_reader.__enter__()
+        self.video_image_reader = sep.loaders.MoviesLoader.prepare_reader(self.video_image_reader, path_to_movie)
         return self.video_image_reader[int(frame_nr)]
 
     def load_tag(self, name_or_num):
@@ -120,9 +125,11 @@ class YoutubeLoader(Loader):
 
         return None
 
-    # def get_relative_path(self, name_or_num):
-    #     path_to_file = self.__get_file_path(self.input_paths, name_or_num)
-    #     return os.path.relpath(path_to_file, self.data_root)
+    def get_relative_path(self, name_or_num):
+        if isinstance(name_or_num, int):
+            name_or_num = self.input_order[name_or_num]
+        youtube_id = self.load_tag(name_or_num)['movie_id']
+        return os.path.join(youtube_id, name_or_num)
 
     def __str__(self):
-        return f"YoutubeLoader for: {self.urls}"
+        return f"YoutubeLoader for: {self.youtube_urls}"

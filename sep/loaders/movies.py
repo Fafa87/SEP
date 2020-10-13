@@ -1,3 +1,4 @@
+import os
 import traceback
 
 import pathlib
@@ -130,15 +131,22 @@ class MoviesLoader(Loader):
         else:
             raise NotImplemented(type(name_or_num))
 
+    @staticmethod
+    def prepare_reader(video_reader, path_to_movie):
+        if video_reader is not None and video_reader.input_string != path_to_movie:
+            video_reader.close()
+            video_reader = None
+        if video_reader is None:
+            video_reader = StreamReader(path_to_movie)
+            video_reader.__enter__()
+        return video_reader
+
     def load_image(self, name_or_num) -> np.ndarray:
         path_to_frame = self.__get_frame_path(self.input_paths, name_or_num)
         if path_to_frame is None:
             raise Exception(f"{name_or_num} does not exist in the loader.")
         path_to_movie, frame_nr = path_to_frame.rsplit("_", maxsplit=1)
-        if self.video_image_reader is not None and self.video_image_reader.input_string != path_to_movie:
-            self.video_image_reader.close()
-        self.video_image_reader = StreamReader(path_to_movie)
-        self.video_image_reader.__enter__()
+        self.video_image_reader = MoviesLoader.prepare_reader(self.video_image_reader, path_to_movie)
         return self.video_image_reader[int(frame_nr)]
 
     def load_tag(self, name_or_num):
@@ -155,9 +163,12 @@ class MoviesLoader(Loader):
 
         return None
 
-    # def get_relative_path(self, name_or_num):
-    #     path_to_file = self.__get_file_path(self.input_paths, name_or_num)
-    #     return os.path.relpath(path_to_file, self.data_root)
+    def get_relative_path(self, name_or_num):
+        if isinstance(name_or_num, int):
+            name_or_num = self.input_order[name_or_num]
+        movie_id = self.load_tag(name_or_num)['movie_id']
+        # TODO in perfect world it would do entire hierarchy up to the movie id
+        return os.path.join(movie_id, name_or_num)
 
     def __str__(self):
         return f"MovieLoader for: {self.data_root}"
