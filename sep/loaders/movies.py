@@ -123,6 +123,18 @@ class MoviesLoader(Loader):
     def path_to_id(self, path):
         return path.stem  # TODO this may not be unique
 
+    def split_frame_path(self, frame_path):
+        """
+        This extract movie and frame components from full frame_path.
+        Args:
+            frame_path: complete path to the frame: movies_path_frame_id
+
+        Returns:
+            path_to_movie, frame_id
+        """
+        path_to_movie, frame_id = frame_path.rsplit("_", maxsplit=1)
+        return path_to_movie, frame_id
+
     def __get_frame_path(self, path_set, name_or_num):
         if isinstance(name_or_num, int):
             name_or_num = self.input_order[name_or_num]
@@ -145,7 +157,7 @@ class MoviesLoader(Loader):
         path_to_frame = self.__get_frame_path(self.input_paths, name_or_num)
         if path_to_frame is None:
             raise Exception(f"{name_or_num} does not exist in the loader.")
-        path_to_movie, frame_nr = path_to_frame.rsplit("_", maxsplit=1)
+        path_to_movie, frame_nr = self.split_frame_path(path_to_frame)
         self.video_image_reader = MoviesLoader.prepare_reader(self.video_image_reader, path_to_movie)
         return self.video_image_reader[int(frame_nr)]
 
@@ -159,7 +171,7 @@ class MoviesLoader(Loader):
         if path_to_frame is None:
             return None
         # TODO read from reader
-        path_to_movie, frame_nr = path_to_frame.rsplit("_", maxsplit=1)
+        path_to_movie, frame_nr = self.split_frame_path(path_to_frame)
 
         return None
 
