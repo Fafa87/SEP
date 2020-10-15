@@ -27,6 +27,7 @@ class ImagesSaver(Saver):
         self.output_root = pathlib.Path(output_root)
 
     def save_result(self, name_or_num, result: np.ndarray, ignore_dtype=None):
+        assert self.loader, "Loader has to be provided."
         ignore_dtype = self.ignore_dtype if ignore_dtype is None else ignore_dtype
         if ignore_dtype:
             assert result.dtype == np.uint8, \
@@ -38,6 +39,7 @@ class ImagesSaver(Saver):
         imageio.imwrite(result_path, result)
 
     def save_tag(self, name_or_num, result_tag):
+        assert self.loader, "Loader has to be provided."
         relative_img_path = self.loader.get_relative_path(name_or_num)
         tag_path = (self.output_root / relative_img_path).with_suffix(".json")
         os.makedirs(tag_path.parent, exist_ok=True)

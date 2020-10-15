@@ -69,6 +69,8 @@ class MoviesLoader(Loader):
                     annotation_id = f"{movie_id}{annotation_id}"
                     self.annotation_paths[annotation_id] = annotation_path
 
+            # TODO assert that there is no inconsistency in images vs annotations movies: #frames, #framerate
+
         self.input_order = sorted(self.input_paths.keys())
 
     def list_movies(self):
@@ -170,12 +172,20 @@ class MoviesLoader(Loader):
         path_to_frame = self.__get_frame_path(self.annotation_paths, name_or_num)
         if path_to_frame is None:
             return None
-        # TODO read from reader
+        # TODO read from reader, add some test for that
         path_to_movie, frame_nr = self.split_frame_path(path_to_frame)
-
-        return None
+        self.video_annotation_reader = MoviesLoader.prepare_reader(self.video_annotation_reader, path_to_movie)
+        return self.video_annotation_reader[int(frame_nr)]
 
     def get_relative_path(self, name_or_num):
+        """
+        Determine the relative path to the given frame.
+        Used by Savers.
+        Args:
+            name_or_num: frame_id or number in entire MoviesLoader
+
+        Returns: movie_id/frame_id
+        """
         if isinstance(name_or_num, int):
             name_or_num = self.input_order[name_or_num]
         movie_id = self.load_tag(name_or_num)['movie_id']
