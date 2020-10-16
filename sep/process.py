@@ -23,6 +23,7 @@ def process(data_loader: Loader, producer: Producer, result_saver: Saver,
 
         segment, segment_tag = producer.calculate(image, tag)
         result_saver.save_result(i, segment)
-        result_saver.save_tag(i, segment_tag)
+        result_saver.save_tag(i, input_tag=tag, result_tag=segment_tag)
+    result_saver.close()
 
     return producer

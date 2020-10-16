@@ -1,8 +1,10 @@
 import traceback
-import typing as t
 
 import cv2
 import numpy as np
+import os
+import pathlib
+import typing as t
 
 from sep._commons import imgutil
 
@@ -57,6 +59,7 @@ class StreamReader:
         return self.frame_num
 
     def __enter__(self):
+        assert os.path.isfile(self.input_string), f"File {self.input_string} does not exist."
         self.reader = cv2.VideoCapture(self.input_string)
         self.frame_rate = int(self.reader.get(cv2.CAP_PROP_FPS))
         self.frame_interval = 1.0 / self.frame_rate
@@ -76,7 +79,8 @@ class StreamReader:
 
 
 class VideoWriter:
-    def __init__(self, output_path, output_shape=None, fps=None, related_reader=None, encoding='mp4v'):
+    def __init__(self, output_path: t.Union[str, pathlib.Path], output_shape=None, fps=None,
+                 related_reader: StreamReader = None, encoding='mp4v'):
         """
         Args:
             output_path: path to the output file
@@ -99,7 +103,7 @@ class VideoWriter:
         else:
             self.frame_rate = int(related_reader.frame_rate)
             self.frame_h, self.frame_w = related_reader.shape
-        self.output_path = output_path
+        self.output_path = str(output_path)
 
     def add(self, image: np.ndarray, accept_bool=False, accept_float=False):
         """
@@ -124,4 +128,7 @@ class VideoWriter:
     def __exit__(self, exc_type, exc_value, tb):
         if exc_type is not None:
             traceback.print_exception(exc_type, exc_value, tb)
+        self.close()
+
+    def close(self):
         self.video_writer.release()

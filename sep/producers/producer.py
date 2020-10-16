@@ -1,17 +1,17 @@
-import json
-import pathlib
-from abc import ABC, abstractmethod
 from timeit import default_timer as timer
-import typing as t
 
-import imageio
 import numpy as np
+import pathlib
+import typing as t
+from abc import ABC, abstractmethod
 
 
 class Producer(ABC):
     """
     This is responsible for creating segmentation that will be later evaluated.
     """
+    TAG_PREFIX = 'producer_'
+    RUN_PREFIX = 'run_'
 
     def __init__(self, name):
         self.name = name
@@ -33,13 +33,11 @@ class Producer(ABC):
 
         seg_tag = {}
         prediction_time = timer() - start_time
-        seg_tag['run_time'] = prediction_time
-        seg_tag['run_fps'] = round(1.0 / prediction_time, 2)
-        seg_tag['producer_name'] = self.name
-        seg_tag['producer_details'] = self.__repr__()
+        seg_tag[f'{Producer.RUN_PREFIX}time'] = prediction_time
+        seg_tag[f'{Producer.RUN_PREFIX}fps'] = round(1.0 / prediction_time, 2)
+        seg_tag[f'{Producer.TAG_PREFIX}name'] = self.name
+        seg_tag[f'{Producer.TAG_PREFIX}details'] = self.__repr__()
         return seg, seg_tag
 
     def __repr__(self):
         return f"{self.__class__} ({self.__dict__})"
-
-

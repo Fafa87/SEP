@@ -23,6 +23,7 @@ class MoviesLoader(Loader):
 
     Beware it is blocking related videos until it is closed.
     """
+    MOVIE_TAG_PREFIX = 'movie_'
 
     def __init__(self, data_root, framerate, clips_len, clips_skip, input_extensions=None,
                  annotation_for_movie_finder: t.Callable[[pathlib.Path], str] = None, verbose=0):
@@ -55,7 +56,7 @@ class MoviesLoader(Loader):
                 frame_path = f"{movie_path}{frame_id}"
                 frame_id = f"{movie_id}{frame_id}"
                 tag['id'] = frame_id
-                update_with_suffix(tag, movie_tag, prefix="movie_")
+                update_with_suffix(tag, movie_tag, prefix=MoviesLoader.MOVIE_TAG_PREFIX)
 
                 self.input_paths[frame_id] = frame_path
                 self.json_tags[frame_id] = tag
