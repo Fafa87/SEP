@@ -65,3 +65,14 @@ class TestVideoReader(TestBase):
             # bool array
             data_bool = np.random.random((100, 100)) > 0.5
             writer.add(data_bool, accept_bool=True)
+
+        with sep._commons.movies.StreamReader(written_path) as video:
+            self.assertEqual(4, len(video))
+
+    def test_writer_invalid_size(self):
+        written_path = self.add_temp("my_movie.mp4")
+
+        with self.assertRaises(ValueError):
+            with sep._commons.movies.VideoWriter(written_path, (100, 100), fps=30) as writer:
+                data_rgb = self.random_rgb((60, 60))
+                writer.add(data_rgb)

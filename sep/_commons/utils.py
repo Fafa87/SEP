@@ -20,3 +20,8 @@ def save_json(path, *data: dict):
     os.makedirs(os.path.dirname(str(path)), exist_ok=True)
     with open(str(path), 'w') as f:
         json.dump(union(*data), f, indent=4, sort_keys=True)
+
+
+def assert_arg(arg_assert, arg_name):
+    if not arg_assert:
+        raise ValueError("Invalid parameter: " + arg_name)

@@ -7,6 +7,7 @@ import pathlib
 import typing as t
 
 from sep._commons import imgutil
+from sep._commons.utils import *
 
 
 class StreamReader:
@@ -59,7 +60,8 @@ class StreamReader:
         return self.frame_num
 
     def __enter__(self):
-        assert os.path.isfile(self.input_string), f"File {self.input_string} does not exist."
+        assert self.input_string.startswith("http") or os.path.isfile(self.input_string), \
+            f"File {self.input_string} does not exist."
         self.reader = cv2.VideoCapture(self.input_string)
         self.frame_rate = int(self.reader.get(cv2.CAP_PROP_FPS))
         self.frame_interval = 1.0 / self.frame_rate
@@ -114,9 +116,14 @@ class VideoWriter:
         """
         assert accept_bool or not image.dtype == np.bool
         assert accept_float or not image.dtype == np.float
+        assert_arg(image.shape[:2] == self.shape, f"image.shape not compatible with {self.shape}")
 
         bgr_array = imgutil.make_rgb(image)[..., ::-1]
         self.video_writer.write(bgr_array)
+
+    @property
+    def shape(self):
+        return self.frame_h, self.frame_w
 
     def __enter__(self):
         self.video_writer = cv2.VideoWriter(self.output_path,
