@@ -44,7 +44,7 @@ class FilesLoader(Loader):
         all_files = [pathlib.Path(p) for p in sorted(glob(os.path.join(data_root, "**", "*.*"), recursive=True))]
 
         input_images_paths = [f for f in all_files
-                              if f.suffix in self.input_extensions and not f.stem.endswith(annotation_suffix)]
+                              if f.suffix.lower() in self.input_extensions and not f.stem.endswith(annotation_suffix)]
 
         self.input_paths = {self.path_to_id(p): p for p in input_images_paths}  # this will check if there are duplicates
         self.input_order = sorted(self.input_paths.keys())

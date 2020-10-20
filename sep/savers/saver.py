@@ -10,6 +10,9 @@ class Saver(ABC):
         self.annotator = None
         pass
 
+    def close(self):
+        pass
+
     @abstractmethod
     def set_output(self, output_root, loader: sep.loaders.loader.Loader):
         pass
@@ -19,5 +22,5 @@ class Saver(ABC):
         pass
 
     @abstractmethod
-    def save_tag(self, name_or_num, result_tag):
+    def save_tag(self, name_or_num, input_tag, result_tag):
         pass

@@ -18,7 +18,7 @@ def extract_to_images(data_loader: Loader, data_saver: Saver,
         print(f"There are {len(data_loader)} images to process.")
 
     data_saver.set_output(output_root, data_loader)
-    if remove_existing:
+    if remove_existing and os.path.exists(output_root):
         shutil.rmtree(output_root)
     os.makedirs(output_root)
 
@@ -27,7 +27,8 @@ def extract_to_images(data_loader: Loader, data_saver: Saver,
         tag = data_loader.load_tag(i)
 
         data_saver.save_result(i, image)
-        data_saver.save_tag(i, tag)
+        data_saver.save_tag(i, tag, result_tag={})
+    data_saver.close()
 
     extracted_loader = sep.loaders.ImagesLoader(output_root)
     if verbose:

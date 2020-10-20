@@ -6,6 +6,7 @@ from timeit import default_timer as timer
 import imageio
 import numpy as np
 
+from sep._commons.utils import *
 from sep.producers.producer import Producer
 
 
@@ -34,8 +35,7 @@ class ImagesProducer(Producer, ABC):
 
     def __save_tag(self, id, tag):
         cache_path = (self.cache_root / str(id)).with_suffix(".json")
-        with open(str(cache_path), 'w') as f:
-            json.dump(tag, f)
+        save_json(cache_path, tag)
 
     def calculate(self, input_image: np.ndarray, input_tag: dict) -> (np.ndarray, dict):
         # TODO is possible and requested load results and tags from cache

@@ -20,6 +20,14 @@ class TestExtract(tests.testbase.TestBase):
         extracted_loader = sep.loaders.ImagesLoader(output_dir)
         self.assertEqual(9, len(extracted_loader.list_images()))
 
+    @unittest.skip("perf_test")
+    def test_extract_from_movie_speed(self):
+        output_dir = self.create_temp_dir()
+        saver = sep.savers.ImagesSaver(image_format='.bmp')
+        with sep.loaders.MoviesLoader(r"D:\Filmy i zdjęcia",
+                                      framerate=None, clips_len=1, clips_skip=2) as movies_loader:
+            sep.extract.extract_to_images(movies_loader, saver, output_dir, remove_existing=True)
+
     def test_extract_from_youtube(self):
         output_dir = self.create_temp_dir()
         saver = sep.savers.ImagesSaver()

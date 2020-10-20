@@ -23,6 +23,7 @@ class MoviesLoader(Loader):
 
     Beware it is blocking related videos until it is closed.
     """
+    MOVIE_TAG_PREFIX = 'movie_'
 
     def __init__(self, data_root, framerate, clips_len, clips_skip, input_extensions=None,
                  annotation_for_movie_finder: t.Callable[[pathlib.Path], str] = None, verbose=0):
@@ -55,7 +56,7 @@ class MoviesLoader(Loader):
                 frame_path = f"{movie_path}{frame_id}"
                 frame_id = f"{movie_id}{frame_id}"
                 tag['id'] = frame_id
-                update_with_suffix(tag, movie_tag, prefix="movie_")
+                update_with_suffix(tag, movie_tag, prefix=MoviesLoader.MOVIE_TAG_PREFIX)
 
                 self.input_paths[frame_id] = frame_path
                 self.json_tags[frame_id] = tag
@@ -68,6 +69,8 @@ class MoviesLoader(Loader):
                     annotation_path = f"{movie_path}{annotation_id}"
                     annotation_id = f"{movie_id}{annotation_id}"
                     self.annotation_paths[annotation_id] = annotation_path
+
+            # TODO assert that there is no inconsistency in images vs annotations movies: #frames, #framerate
 
         self.input_order = sorted(self.input_paths.keys())
 
@@ -123,6 +126,18 @@ class MoviesLoader(Loader):
     def path_to_id(self, path):
         return path.stem  # TODO this may not be unique
 
+    def split_frame_path(self, frame_path):
+        """
+        This extract movie and frame components from full frame_path.
+        Args:
+            frame_path: complete path to the frame: movies_path_frame_id
+
+        Returns:
+            path_to_movie, frame_id
+        """
+        path_to_movie, frame_id = frame_path.rsplit("_", maxsplit=1)
+        return path_to_movie, frame_id
+
     def __get_frame_path(self, path_set, name_or_num):
         if isinstance(name_or_num, int):
             name_or_num = self.input_order[name_or_num]
@@ -145,7 +160,7 @@ class MoviesLoader(Loader):
         path_to_frame = self.__get_frame_path(self.input_paths, name_or_num)
         if path_to_frame is None:
             raise Exception(f"{name_or_num} does not exist in the loader.")
-        path_to_movie, frame_nr = path_to_frame.rsplit("_", maxsplit=1)
+        path_to_movie, frame_nr = self.split_frame_path(path_to_frame)
         self.video_image_reader = MoviesLoader.prepare_reader(self.video_image_reader, path_to_movie)
         return self.video_image_reader[int(frame_nr)]
 
@@ -158,12 +173,20 @@ class MoviesLoader(Loader):
         path_to_frame = self.__get_frame_path(self.annotation_paths, name_or_num)
         if path_to_frame is None:
             return None
-        # TODO read from reader
-        path_to_movie, frame_nr = path_to_frame.rsplit("_", maxsplit=1)
-
-        return None
+        # TODO read from reader, add some test for that
+        path_to_movie, frame_nr = self.split_frame_path(path_to_frame)
+        self.video_annotation_reader = MoviesLoader.prepare_reader(self.video_annotation_reader, path_to_movie)
+        return self.video_annotation_reader[int(frame_nr)]
 
     def get_relative_path(self, name_or_num):
+        """
+        Determine the relative path to the given frame.
+        Used by Savers.
+        Args:
+            name_or_num: frame_id or number in entire MoviesLoader
+
+        Returns: movie_id/frame_id
+        """
         if isinstance(name_or_num, int):
             name_or_num = self.input_order[name_or_num]
         movie_id = self.load_tag(name_or_num)['movie_id']
