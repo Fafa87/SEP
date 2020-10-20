@@ -2,7 +2,6 @@ import traceback
 
 import cv2
 import numpy as np
-import os
 import pathlib
 import typing as t
 
@@ -15,6 +14,7 @@ class StreamReader:
         # TODO option to read from camera?
         self.input_string = str(input_string)
         self.frame_num = None
+        self.current_frame = 0
 
     def __iter__(self):
         return self.read_samples(self.frame_rate)
@@ -45,11 +45,20 @@ class StreamReader:
             current_time += self.frame_interval
         return res
 
+    def move_to_item(self, item):
+        if self.current_frame > item:
+            self.reader.set(cv2.CAP_PROP_POS_FRAMES, item)
+        else:
+            while self.current_frame < item:
+                self.reader.grab()
+                self.current_frame += 1
+
     def __getitem__(self, item):
-        self.reader.set(cv2.CAP_PROP_POS_FRAMES, item)
+        self.move_to_item(item)
         res, image = self.reader.read()
         if not res:
             print(f"Failed to get frame nr {item}.")
+        self.current_frame = item + 1
         return image[..., ::-1]
 
     @property
