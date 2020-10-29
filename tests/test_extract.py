@@ -28,6 +28,7 @@ class TestExtract(tests.testbase.TestBase):
                                       framerate=None, clips_len=1, clips_skip=2) as movies_loader:
             sep.extract.extract_to_images(movies_loader, saver, output_dir, remove_existing=True)
 
+    @unittest.skip("internet")
     def test_extract_from_youtube(self):
         output_dir = self.create_temp_dir()
         saver = sep.savers.ImagesSaver()

@@ -1,10 +1,9 @@
+from glob import glob
+
 import json
 import os
 import pathlib
 import typing as t
-from glob import glob
-
-import imageio
 
 from sep.loaders.loader import Loader
 
@@ -67,6 +66,29 @@ class FilesLoader(Loader):
             print(f"Found {len(self.annotation_paths)} annotations.")
             print(f"Found {len(self.json_tags)} tags.")
 
+    #def filter_files(self, names_or_nums):
+        
+
+    def get_relative_paths(self, name_or_num):
+        input_rel_path = self.__get_file_path(self.input_paths, name_or_num, relative=True)
+        json_rel_path = self.__get_file_path(self.json_tags, name_or_num, relative=True)
+        annotation_rel_path = self.__get_file_path(self.annotation_paths, name_or_num, relative=True)
+        return {"image": input_rel_path,
+                "tag": json_rel_path,
+                "annotation": annotation_rel_path}
+
+    def save(self, listing_path, add_tag_path=True):
+        data_lines = []
+        for name_or_num in self.list_images():
+            paths = self.get_relative_paths(name_or_num)
+            line = [paths['image'], paths['annotation']]
+            if add_tag_path:
+                line.append(paths['tag'])
+            line = [p or "" for p in line]
+            data_lines.append(", ".join(line) + "\n")
+
+        with open(listing_path, "w") as listing_file:
+            listing_file.writelines(data_lines)
 
     def path_to_id(self, path):
         return path.stem  # TODO this may not be unique, we may use ids from tags instead
@@ -77,11 +99,14 @@ class FilesLoader(Loader):
     def list_images_paths(self):
         return [self.input_paths[p] for p in self.input_order]
 
-    def __get_file_path(self, path_set, name_or_num):
+    def __get_file_path(self, path_set, name_or_num, relative=False):
         if isinstance(name_or_num, int):
             name_or_num = self.input_order[name_or_num]
         if isinstance(name_or_num, str):
-            return path_set.get(name_or_num, None)
+            file_path = path_set.get(name_or_num, None)
+            if relative and file_path is not None:
+                file_path = os.path.relpath(file_path, self.data_root)
+            return file_path
         else:
             raise NotImplemented(type(name_or_num))
 
@@ -100,8 +125,7 @@ class FilesLoader(Loader):
             return tag
 
     def get_relative_path(self, name_or_num):
-        path_to_file = self.__get_file_path(self.input_paths, name_or_num)
-        return os.path.relpath(path_to_file, self.data_root)
+        return self.__get_file_path(self.input_paths, name_or_num, relative=True)
 
     def load_annotation(self, name_or_num) -> t.Optional[pathlib.Path]:
         path_to_file = self.__get_file_path(self.annotation_paths, name_or_num)
