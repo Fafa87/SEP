@@ -24,10 +24,12 @@ class MoviesLoader(Loader):
     """
     MOVIE_TAG_PREFIX = 'movie_'
 
-    def __init__(self, data_root, framerate, clips_len, clips_skip, input_extensions=None,
-                 annotation_suffix='_gt', annotation_extension='mp4',
-                 annotation_for_movie_finder: t.Callable[[pathlib.Path], str] = None, verbose=0):
+    def __init__(self, data_root, framerate, clips_len=99999999, clips_skip=0, input_extensions=None,
+                 annotation_suffix='_gt', annotation_extension='.mp4',
+                 annotation_for_movie_finder: t.Callable[[pathlib.Path], str] = None,
+                 annotation_as_mask=False, verbose=0):
         super().__init__()
+        self.annotation_as_mask = annotation_as_mask
         input_extensions = input_extensions or ['.mov', '.mp4', '.mpg', '.avi']
         self.data_root = data_root
         self.files_loader = FilesLoader.from_tree(data_root, input_extensions=input_extensions,
@@ -47,7 +49,7 @@ class MoviesLoader(Loader):
 
         for movie_path in self.list_movies_paths():
             movie_id = self.files_loader.path_to_id(movie_path)
-            annotation_path = self.files_loader.load_annotation(movie_id)
+            annotation_movie_path = self.files_loader.load_annotation(movie_id)
             movie_tag = self.files_loader.load_tag(movie_id)
 
             # Process input data movies.
@@ -63,11 +65,11 @@ class MoviesLoader(Loader):
                 self.json_tags[frame_id] = tag
 
             # Process annotation movies.
-            if annotation_path:
-                annotation_frames = MoviesLoader.load_movie_images(annotation_path, self.framerate,
+            if annotation_movie_path:
+                annotation_frames = MoviesLoader.load_movie_images(annotation_movie_path, self.framerate,
                                                                    clips_len=self.clips_len, clips_skip=self.clips_skip)
                 for annotation_id in annotation_frames['images']:
-                    annotation_path = f"{movie_path}{annotation_id}"
+                    annotation_path = f"{annotation_movie_path}{annotation_id}"
                     annotation_id = f"{movie_id}{annotation_id}"
                     self.annotation_paths[annotation_id] = annotation_path
 
@@ -174,10 +176,14 @@ class MoviesLoader(Loader):
         path_to_frame = self.__get_frame_path(self.annotation_paths, name_or_num)
         if path_to_frame is None:
             return None
-        # TODO read from reader, add some test for that
         path_to_movie, frame_nr = self.split_frame_path(path_to_frame)
         self.video_annotation_reader = MoviesLoader.prepare_reader(self.video_annotation_reader, path_to_movie)
-        return self.video_annotation_reader[int(frame_nr)]
+        # TODO this can be single or multichannel - perhaps someone should check that or convert to single channel?
+        annotation_array = self.video_annotation_reader[int(frame_nr)]
+        # The annotation video can be compressed so that it is not [0,1] or [0,255] but be a spread.
+        if self.annotation_as_mask:
+            return annotation_array >= 128
+        return annotation_array
 
     def get_relative_path(self, name_or_num):
         """

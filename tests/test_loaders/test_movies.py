@@ -103,6 +103,28 @@ class TestMoviesLoader(TestBase):
             self.assertEqual(os.path.join("dinosaur_1", "Dinosaur - 1438_00000"),
                              movies_loader.get_relative_path("Dinosaur - 1438_00000"))
 
+    def test_movie_annotations(self):
+        with MoviesLoader(self.root_test_dir("input/fafa"), framerate=5) as movies_loader:
+            self.assertEqual(11, len(movies_loader))
+            sample_0 = movies_loader[0]
+            self.assertEqual((720, 1080, 3), sample_0['image'].shape)
+            self.assertEqual((720, 1080, 3), sample_0['annotation'].shape)
+            # it is compressed so that it is not exactly [0,1] or [0,255]
+            self.assertTrue(len(np.unique(sample_0['annotation'])) > 60)
+            sample_8 = movies_loader[8]
+            self.assertEqual((720, 1080, 3), sample_8['image'].shape)
+            self.assertEqual((720, 1080, 3), sample_8['annotation'].shape)
+            self.assertTrue(len(np.unique(sample_0['annotation'])) > 60)
+
+            self.np_assert_not_equal(sample_0['annotation'], sample_8['annotation'])
+
+        # now with 'make-it-a-mask' option on
+        with MoviesLoader(self.root_test_dir("input/fafa"), framerate=5, annotation_as_mask=True) as movies_loader:
+            sample_0 = movies_loader[0]
+            self.assertEqual((720, 1080, 3), sample_0['annotation'].shape)
+            # now it is turned into mask
+            self.np_assert_equal([False, True], np.unique(sample_0['annotation']))
+
 
 if __name__ == '__main__':
     unittest.main()
