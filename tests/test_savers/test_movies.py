@@ -11,8 +11,8 @@ class TestMoviesSaver(TestBase):
         with MoviesLoader(self.root_test_dir("input"), framerate=5, clips_len=1, clips_skip=10) as movies_loader:
             temp_dir = self.create_temp_dir()
             movies = movies_loader.list_movies()
-            self.assertEqual(2, len(movies))
-            self.assertEqual(9, len(movies_loader.list_images()))
+            self.assertEqual(3, len(movies))
+            self.assertEqual(10, len(movies_loader.list_images()))
             self.assertEqual("Dragon - 32109", movies[1])
             movies_loader.load_image(0)
 

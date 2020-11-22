@@ -17,7 +17,7 @@ class TestExtract(tests.testbase.TestBase):
             loader = sep.extract.extract_to_images(movies_loader, saver, output_dir, remove_existing=True)
             self.assertEqual(9, len(loader.list_images()))
 
-        extracted_loader = sep.loaders.ImagesLoader(output_dir)
+        extracted_loader = sep.loaders.ImagesLoader.from_tree(output_dir)
         self.assertEqual(9, len(extracted_loader.list_images()))
 
     @unittest.skip("perf_test")
@@ -38,7 +38,7 @@ class TestExtract(tests.testbase.TestBase):
             loader = sep.extract.extract_to_images(youtube_loader, saver, output_dir, remove_existing=True)
             self.assertEqual(5, len(loader.list_images()))
 
-        extracted_loader = sep.loaders.ImagesLoader(output_dir)
+        extracted_loader = sep.loaders.ImagesLoader.from_tree(output_dir)
         self.assertEqual(5, len(extracted_loader.list_images()))
 
 

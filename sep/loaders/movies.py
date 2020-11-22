@@ -1,9 +1,8 @@
-import os
 import traceback
 
+import numpy as np
 import pathlib
 import typing as t
-import numpy as np
 
 from sep._commons.movies import StreamReader
 from sep._commons.utils import *
@@ -26,14 +25,16 @@ class MoviesLoader(Loader):
     MOVIE_TAG_PREFIX = 'movie_'
 
     def __init__(self, data_root, framerate, clips_len, clips_skip, input_extensions=None,
+                 annotation_suffix='_gt', annotation_extension='mp4',
                  annotation_for_movie_finder: t.Callable[[pathlib.Path], str] = None, verbose=0):
         super().__init__()
         input_extensions = input_extensions or ['.mov', '.mp4', '.mpg', '.avi']
         self.data_root = data_root
-        self.files_loader = FilesLoader(data_root, input_extensions=input_extensions,
-                                        annotation_extension='.mp4',
-                                        annotation_for_image_finder=annotation_for_movie_finder,
-                                        verbose=verbose)
+        self.files_loader = FilesLoader.from_tree(data_root, input_extensions=input_extensions,
+                                                  annotation_extension=annotation_extension,
+                                                  annotation_suffix=annotation_suffix,
+                                                  annotation_for_image_finder=annotation_for_movie_finder,
+                                                  verbose=verbose)
         self.clips_skip = clips_skip
         self.clips_len = clips_len
         self.framerate = framerate

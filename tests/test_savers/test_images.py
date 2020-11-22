@@ -12,7 +12,7 @@ from tests.testbase import TestBase
 
 class TestImagesSaver(TestBase):
     def test_saving_in_hierarchy(self):
-        test_images_loader = ImagesLoader(self.root_test_dir("input"))
+        test_images_loader = ImagesLoader.from_tree(self.root_test_dir("input"))
         temp_dir = self.create_temp_dir()
 
         saver = ImagesSaver(temp_dir, test_images_loader)
@@ -32,7 +32,7 @@ class TestImagesSaver(TestBase):
         saver.save_result(known_name, sample_res_2)
         self.assertTrue(os.path.isfile(os.path.join(temp_dir, 'lights', 'lights01.png')))
 
-        saved_images_loader = ImagesLoader(temp_dir)
+        saved_images_loader = ImagesLoader.from_tree(temp_dir)
         names = saved_images_loader.list_images()
         self.assertEqual(2, len(names))
 

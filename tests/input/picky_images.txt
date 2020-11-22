@@ -1,0 +1,4 @@
+humans/human_1.tif, humans/human_1_gt.png, humans/human_1.json
+humans\human_3.tif, humans\human_3_gt.png
+lights\lights01.tif, lights\lights01_gt.png
+lights\lights02.tif,

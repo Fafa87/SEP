@@ -21,7 +21,7 @@ class TestEvaluate(tests.testbase.TestBase):
             return image[..., self.channel] > 200
 
     def test_evaluate_simple(self):
-        test_images_loader = sep.loaders.images.ImagesLoader(self.root_test_dir("input/lights"))
+        test_images_loader = sep.loaders.images.ImagesLoader.from_tree(self.root_test_dir("input/lights"))
         output_dir = self.create_temp_dir()
 
         producer_red = self.Threshold("Red", 0, self.create_temp_dir())
@@ -48,7 +48,7 @@ class TestEvaluate(tests.testbase.TestBase):
         self.assertTrue(report_overall["iou"].values[0] > 0.3)
 
     def test_compare_simple(self):
-        test_images_loader = sep.loaders.images.ImagesLoader(self.root_test_dir("input/lights"))
+        test_images_loader = sep.loaders.images.ImagesLoader.from_tree(self.root_test_dir("input/lights"))
         output_dir = self.create_temp_dir()
 
         producer_red = self.Threshold("Red", 0, self.create_temp_dir())

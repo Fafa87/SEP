@@ -19,12 +19,12 @@ class TestProcess(tests.testbase.TestBase):
 
     def test_process_images(self):
         output_dir = self.create_temp_dir()
-        images_loader = sep.loaders.ImagesLoader(self.root_test_dir("input/lights"))
+        images_loader = sep.loaders.ImagesLoader.from_tree(self.root_test_dir("input/lights"))
         images_saver = sep.savers.ImagesSaver()
         producer_red = self.Threshold("Red", 0, self.create_temp_dir())
 
         sep.process.process(images_loader, producer_red, images_saver, output_dir)
-        output_loader = sep.loaders.images.ImagesLoader(output_dir)
+        output_loader = sep.loaders.images.ImagesLoader.from_tree(output_dir)
         self.assertEqual(len(images_loader), len(output_loader))
 
     def test_process_movies_frames(self):
@@ -35,7 +35,7 @@ class TestProcess(tests.testbase.TestBase):
         producer_red = self.Threshold("Red", 0, self.create_temp_dir())
 
         sep.process.process(movies_loader, producer_red, images_saver, output_dir)
-        output_loader = sep.loaders.images.ImagesLoader(output_dir)
+        output_loader = sep.loaders.images.ImagesLoader.from_tree(output_dir)
         self.assertEqual(len(movies_loader), len(output_loader))
 
     def test_process_movies_files(self):

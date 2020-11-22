@@ -25,3 +25,8 @@ def save_json(path, *data: dict):
 def assert_arg(arg_assert, arg_name):
     if not arg_assert:
         raise ValueError("Invalid parameter: " + arg_name)
+
+
+def assert_value(value, description):
+    if not value:
+        raise ValueError(description)
