@@ -29,7 +29,7 @@ class TestProcess(tests.testbase.TestBase):
 
     def test_process_movies_frames(self):
         output_dir = self.create_temp_dir()
-        movies_loader = sep.loaders.MoviesLoader(self.root_test_dir("input/reptiles"),
+        movies_loader = sep.loaders.MoviesLoader.from_tree(self.root_test_dir("input/reptiles"),
                                                  framerate=1, clips_skip=0, clips_len=1)
         images_saver = sep.savers.ImagesSaver()
         producer_red = self.Threshold("Red", 0, self.create_temp_dir())
@@ -40,14 +40,14 @@ class TestProcess(tests.testbase.TestBase):
 
     def test_process_movies_files(self):
         output_dir = self.create_temp_dir()
-        with sep.loaders.MoviesLoader(self.root_test_dir("input/reptiles"),
+        with sep.loaders.MoviesLoader.from_tree(self.root_test_dir("input/reptiles"),
                                       framerate=1, clips_skip=0, clips_len=1) as movies_loader:
             movie_saver = sep.savers.MoviesSaver()
             movie_saver.set_output(output_dir, movies_loader)
             producer_red = self.Threshold("Red", 0, self.create_temp_dir(), threshold=30)
             sep.process.process(movies_loader, producer_red, movie_saver, output_dir)
 
-        with sep.loaders.MoviesLoader(output_dir,
+        with sep.loaders.MoviesLoader.from_tree(output_dir,
                                       framerate=1, clips_skip=0, clips_len=1) as output_loader:
             self.assertEqual(len(movies_loader), len(output_loader))
             self.assertEqual(movies_loader.list_movies(), output_loader.list_movies())

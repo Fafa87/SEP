@@ -24,28 +24,53 @@ class MoviesLoader(Loader):
     """
     MOVIE_TAG_PREFIX = 'movie_'
 
-    def __init__(self, data_root, framerate, clips_len=99999999, clips_skip=0, input_extensions=None,
-                 annotation_suffix='_gt', annotation_extension='.mp4',
-                 annotation_for_movie_finder: t.Callable[[pathlib.Path], str] = None,
-                 annotation_as_mask=False, verbose=0):
+    def __init__(self, data_root, framerate, clips_len=99999999, clips_skip=0, annotation_as_mask=False, verbose=0):
         super().__init__()
         self.annotation_as_mask = annotation_as_mask
-        input_extensions = input_extensions or ['.mov', '.mp4', '.mpg', '.avi']
         self.data_root = data_root
-        self.files_loader = FilesLoader.from_tree(data_root, input_extensions=input_extensions,
-                                                  annotation_extension=annotation_extension,
-                                                  annotation_suffix=annotation_suffix,
-                                                  annotation_for_image_finder=annotation_for_movie_finder,
-                                                  verbose=verbose)
+        self.verbose = verbose
         self.clips_skip = clips_skip
         self.clips_len = clips_len
         self.framerate = framerate
         self.video_image_reader: t.Optional[StreamReader] = None
         self.video_annotation_reader: t.Optional[StreamReader] = None
-
         self.input_paths = {}
         self.annotation_paths = {}
         self.json_tags = {}
+        self.files_loader = None
+
+    @classmethod
+    def from_tree(cls, data_root,
+                  framerate, clips_len=99999999, clips_skip=0, annotation_as_mask=False, verbose=0,
+                  input_extensions=None,
+                  annotation_suffix='_gt', annotation_extension='.mp4',
+                  annotation_for_movie_finder: t.Callable[[pathlib.Path], str] = None):
+        self = cls(data_root=data_root, framerate=framerate, clips_len=clips_len, clips_skip=clips_skip,
+                   annotation_as_mask=annotation_as_mask, verbose=verbose)
+        input_extensions = input_extensions or ['.mov', '.mp4', '.mpg', '.avi']
+        files_loader = FilesLoader.from_tree(data_root, input_extensions=input_extensions,
+                                             annotation_extension=annotation_extension,
+                                             annotation_suffix=annotation_suffix,
+                                             annotation_for_image_finder=annotation_for_movie_finder,
+                                             verbose=verbose)
+        self.generate_frames(files_loader)
+        return self
+
+    @classmethod
+    def from_listing(cls, data_root, filepath,
+                     framerate, clips_len=99999999, clips_skip=0, annotation_as_mask=False, verbose=0,
+                     validate_list=False):
+        self = cls(data_root=data_root, framerate=framerate, clips_len=clips_len, clips_skip=clips_skip,
+                   annotation_as_mask=annotation_as_mask, verbose=verbose)
+        files_loader = FilesLoader.from_listing(data_root, filepath, verbose, validate_list)
+        self.generate_frames(files_loader)
+        return self
+
+    def generate_frames(self, files_loader: FilesLoader):
+        self.input_paths = {}
+        self.annotation_paths = {}
+        self.json_tags = {}
+        self.files_loader = files_loader
 
         for movie_path in self.list_movies_paths():
             movie_id = self.files_loader.path_to_id(movie_path)

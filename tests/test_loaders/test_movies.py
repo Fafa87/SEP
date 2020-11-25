@@ -2,6 +2,7 @@ import itertools
 import numpy as np
 import os
 import unittest
+from pathlib import Path
 
 from sep.loaders import MoviesLoader
 from tests.testbase import TestBase
@@ -9,8 +10,8 @@ from tests.testbase import TestBase
 
 class TestMoviesLoader(TestBase):
     def test_loading(self):
-        with MoviesLoader(self.root_test_dir("input/reptiles"),
-                          framerate=10, clips_len=5, clips_skip=10) as test_movies_loader:
+        with MoviesLoader.from_tree(self.root_test_dir("input/reptiles"),
+                                    framerate=10, clips_len=5, clips_skip=10) as test_movies_loader:
             self.assertEqual(2, len(test_movies_loader.list_movies()))
             self.assertEqual(2, len(test_movies_loader.list_movies_paths()))
 
@@ -56,8 +57,8 @@ class TestMoviesLoader(TestBase):
             self.assertSubset(tag_last, {'movie_id': 'dragon_1', 'movie_source': 'pixabay', 'movie_type': 'flying'})
 
     def test_loading_iterations(self):
-        with MoviesLoader(self.root_test_dir("input/reptiles"),
-                          framerate=5, clips_len=1, clips_skip=10) as test_movies_loader:
+        with MoviesLoader.from_tree(self.root_test_dir("input/reptiles"),
+                                    framerate=5, clips_len=1, clips_skip=10) as test_movies_loader:
             self.assertEqual(9, len(test_movies_loader.list_images_paths()))
             for sample in itertools.islice(test_movies_loader, 0, 5):
                 tag = sample['tag']
@@ -94,8 +95,8 @@ class TestMoviesLoader(TestBase):
         self.assertEqual(1, loaded_tags[2]['clip_nr'])
 
     def test_relative(self):
-        with MoviesLoader(self.root_test_dir("input/reptiles"),
-                          framerate=5, clips_len=1, clips_skip=10) as movies_loader:
+        with MoviesLoader.from_tree(self.root_test_dir("input/reptiles"),
+                                    framerate=5, clips_len=1, clips_skip=10) as movies_loader:
             data_names = movies_loader.list_images()
             self.assertEqual(9, len(data_names))
             self.assertEqual("Dinosaur - 1438_00000", data_names[0])
@@ -104,7 +105,7 @@ class TestMoviesLoader(TestBase):
                              movies_loader.get_relative_path("Dinosaur - 1438_00000"))
 
     def test_movie_annotations(self):
-        with MoviesLoader(self.root_test_dir("input/fafa"), framerate=5) as movies_loader:
+        with MoviesLoader.from_tree(self.root_test_dir("input/fafa"), framerate=5) as movies_loader:
             self.assertEqual(11, len(movies_loader))
             sample_0 = movies_loader[0]
             self.assertEqual((720, 1080, 3), sample_0['image'].shape)
@@ -115,16 +116,40 @@ class TestMoviesLoader(TestBase):
             self.assertEqual((720, 1080, 3), sample_8['image'].shape)
             self.assertEqual((720, 1080, 3), sample_8['annotation'].shape)
             self.assertTrue(len(np.unique(sample_0['annotation'])) > 60)
-
             self.np_assert_not_equal(sample_0['annotation'], sample_8['annotation'])
 
         # now with 'make-it-a-mask' option on
-        with MoviesLoader(self.root_test_dir("input/fafa"), framerate=5, annotation_as_mask=True) as movies_loader:
+        with MoviesLoader.from_tree(self.root_test_dir("input/fafa"), framerate=5, annotation_as_mask=True) as movies_loader:
             sample_0 = movies_loader[0]
             self.assertEqual((720, 1080, 3), sample_0['annotation'].shape)
             # now it is turned into mask
             self.np_assert_equal([False, True], np.unique(sample_0['annotation']))
 
+    def test_loading_with_listing(self):
+        with self.create_temp("loader_listing.txt") as listing_file:
+            listing_file.writelines(f"{Path('reptiles/Dragon - 32109.mp4')}, {Path('reptiles/Dragon - 32109_gt.mp4')}\n")
+
+        with MoviesLoader.from_listing(self.root_test_dir("input"), filepath="loader_listing.txt",
+                                       framerate=10, clips_len=5, clips_skip=10) as test_movies_loader:
+            self.assertEqual(1, len(test_movies_loader.list_movies()))
+            self.assertEqual(1, len(test_movies_loader.list_movies_paths()))
+
+            tag = test_movies_loader.load_tag(0)
+            self.assertEqual('Dragon - 32109', tag['movie_id'])
+            self.assertIsNone(test_movies_loader.load_annotation(0))
+
+        # now with tag
+        with self.create_temp("loader_listing.txt") as listing_file:
+            listing_file.writelines(f"{Path('reptiles/Dragon - 32109.mp4')}, {Path('reptiles/Dragon - 32109_gt.mp4')}, {Path('reptiles/Dragon - 32109.json')}\n")
+
+        with MoviesLoader.from_listing(self.root_test_dir("input"), filepath="loader_listing.txt",
+                                       framerate=10, clips_len=5, clips_skip=10) as test_movies_loader:
+            self.assertEqual(1, len(test_movies_loader.list_movies()))
+
+            tag = test_movies_loader.load_tag(0)
+            self.assertEqual('dragon_1', tag['movie_id'])
+            self.assertEqual('pixabay', tag['movie_source'])
+            self.assertIsNone(test_movies_loader.load_annotation(0))
 
 if __name__ == '__main__':
     unittest.main()

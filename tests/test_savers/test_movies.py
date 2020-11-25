@@ -8,7 +8,7 @@ from tests.testbase import TestBase
 
 class TestMoviesSaver(TestBase):
     def test_saving_in_hierarchy(self):
-        with MoviesLoader(self.root_test_dir("input"), framerate=5, clips_len=1, clips_skip=10) as movies_loader:
+        with MoviesLoader.from_tree(self.root_test_dir("input"), framerate=5, clips_len=1, clips_skip=10) as movies_loader:
             temp_dir = self.create_temp_dir()
             movies = movies_loader.list_movies()
             self.assertEqual(3, len(movies))
@@ -27,7 +27,7 @@ class TestMoviesSaver(TestBase):
             self.assertTrue(os.path.isfile(os.path.join(temp_dir, "Dinosaur - 1438.mp4")))
             self.assertTrue(os.path.isfile(os.path.join(temp_dir, "Dragon - 32109.mp4")))
 
-        with MoviesLoader(temp_dir, framerate=5, clips_len=1, clips_skip=0) as reload_movies:
+        with MoviesLoader.from_tree(temp_dir, framerate=5, clips_len=1, clips_skip=0) as reload_movies:
             self.assertEqual(2, len(reload_movies.list_movies()))
             self.assertEqual(2, len(reload_movies.list_images()))
             # TODO check tag if it is stripped of the movie per movie file

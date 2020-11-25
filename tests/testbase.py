@@ -13,10 +13,11 @@ class TestBase(unittest.TestCase):
 
     def tearDown(self):
         for path in self.to_clear:
-            if os.path.isfile(path):
-                os.remove(path)
-            else:
-                shutil.rmtree(path)
+            if os.path.exists(path):
+                if os.path.isfile(path):
+                    os.remove(path)
+                else:
+                    shutil.rmtree(path)
 
     def save_temp(self, path, image):
         self.to_clear.append(path)
