@@ -12,7 +12,7 @@ from tests.testbase import TestBase
 
 class TestImagesSaver(TestBase):
     def test_saving_in_hierarchy(self):
-        test_images_loader = ImagesLoader.from_tree(self.root_test_dir("input"))
+        test_images_loader = ImagesLoader.from_tree(self.root_test_dir("input/basics"))
         temp_dir = self.create_temp_dir()
 
         saver = ImagesSaver(temp_dir, test_images_loader)

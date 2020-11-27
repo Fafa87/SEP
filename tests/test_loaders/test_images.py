@@ -9,7 +9,7 @@ from tests.testbase import TestBase
 
 class TestImagesLoader(TestBase):
     def test_loading(self):
-        loader = ImagesLoader.from_tree(self.root_test_dir("input/lights"))
+        loader = ImagesLoader.from_tree(self.root_test_dir("input/basics/lights"))
         self.assertEqual(2, len(loader))
         self.assertEqual(['lights01', 'lights02'], loader.input_order)
 
@@ -32,14 +32,14 @@ class TestImagesLoader(TestBase):
         self.assertEqual(0, tag_1["id"])  # TODO RETHINK default tags mirror exact call
 
     def test_get_element(self):
-        loader = ImagesLoader.from_tree(self.root_test_dir("input/lights"))
+        loader = ImagesLoader.from_tree(self.root_test_dir("input/basics/lights"))
         second_elem = loader[1]
         self.assertIn("image", second_elem)
         self.assertIn("annotation", second_elem)
         self.assertIn("tag", second_elem)
 
     def test_iterate_through(self):
-        loader = ImagesLoader.from_tree(self.root_test_dir("input/lights"))
+        loader = ImagesLoader.from_tree(self.root_test_dir("input/basics/lights"))
         data = [p for p in loader]
         self.assertEqual(2, len(data))
         second_elem = data[1]
@@ -48,7 +48,7 @@ class TestImagesLoader(TestBase):
         self.assertIn("tag", second_elem)
 
     def test_relative(self):
-        loader = ImagesLoader.from_tree(self.root_test_dir("input"))
+        loader = ImagesLoader.from_tree(self.root_test_dir("input/basics"))
         data_names = loader.list_images()
         self.assertEqual(5, len(data_names))
         self.assertEqual("human_1", data_names[0])
@@ -56,7 +56,7 @@ class TestImagesLoader(TestBase):
         self.assertEqual(os.path.join("humans", "human_1.tif"), loader.get_relative_path("human_1"))
 
     def test_listing_save(self):
-        loader = ImagesLoader.from_tree(self.root_test_dir("input"))
+        loader = ImagesLoader.from_tree(self.root_test_dir("input/basics"))
         data_names = loader.list_images()
         self.assertEqual(5, len(data_names))
 
@@ -78,7 +78,7 @@ class TestImagesLoader(TestBase):
                          listing_lines[0].strip())
 
     def test_listing_filter_load(self):
-        loader = ImagesLoader.from_tree(self.root_test_dir("input"))
+        loader = ImagesLoader.from_tree(self.root_test_dir("input/basics"))
         self.assertEqual(5, len(loader.list_images()))
         names = loader.list_images()
         loader.filter_files([0, 'human_3', 4])
@@ -91,7 +91,7 @@ class TestImagesLoader(TestBase):
         loader.save(listing_file, add_tag_path=False)
 
         # check that there are 3 lines and that they point to the actual files
-        loader_reloaded = ImagesLoader.from_listing(self.root_test_dir("input"), filepath=listing_file)
+        loader_reloaded = ImagesLoader.from_listing(self.root_test_dir("input/basics"), filepath=listing_file)
         self.assertEqual(3, len(loader_reloaded.list_images()))
         self.assertEqual(loader.list_images(), loader_reloaded.list_images())
 
@@ -102,7 +102,7 @@ class TestImagesLoader(TestBase):
             # TODO there should be difference between not known ground truth path and non existing file at known position
             # TODO at the moment there is none - there is no trace of what was in the listing file
 
-        loader_proper = ImagesLoader.from_listing(self.root_test_dir("input"), filepath="loader_listing.txt")
+        loader_proper = ImagesLoader.from_listing(self.root_test_dir("input/basics"), filepath="loader_listing.txt")
         self.assertEqual(2, len(loader_proper))
         elem_1 = loader_proper[0]
         self.assertIsNotNone(elem_1['image'])
@@ -129,7 +129,7 @@ class TestImagesLoader(TestBase):
                 f"{Path('humans/human_2.tif')}, {Path('humans/human_2_gt_extra.png')}, {Path('humans/human_2_gt_extra.json')}\n")
 
         # this should work - TODO potentially log warnings
-        loader = ImagesLoader.from_listing(self.root_test_dir("input"), filepath="loader_listing.txt")
+        loader = ImagesLoader.from_listing(self.root_test_dir("input/basics"), filepath="loader_listing.txt")
         self.assertEqual(4, len(loader.list_images()))
         self.assertIsNone(loader['lights01']['annotation'])
         self.assertIsNone(loader['lights02']['annotation'])
@@ -138,7 +138,8 @@ class TestImagesLoader(TestBase):
         self.assertNotIn("source", loader['human_2']['tag'])
 
     def test_listing_load_from_actual_file(self):
-        loader = ImagesLoader.from_listing(self.root_test_dir("input"), filepath=self.root_test_dir("input/picky_images.txt"))
+        loader = ImagesLoader.from_listing(self.root_test_dir("input/basics"),
+                                           filepath=self.root_test_dir("input/picky_images.txt"))
         images_names = loader.list_images()
         expected_names = ['human_1', 'human_3', 'lights01', 'lights02']
         self.assertEqual(expected_names, images_names)
@@ -165,6 +166,26 @@ class TestImagesLoader(TestBase):
         self.assertIsNone(data[3]['annotation'])
         self.assertNotIn("source", data[3]['tag'])
         self.assertIsNotNone(data[3]['tag'])
+
+    def test_extended_ids(self):
+        loader = ImagesLoader.from_tree(self.root_test_dir("input/basics"))
+        first_image = loader.list_images()[0]
+        self.assertEqual("human_1", first_image)
+        first_path = loader.list_images_paths()[0]
+        self.assertEqual("human_1", loader.path_to_id(first_path))
+
+        loader.extended_ids = True
+        self.assertEqual("humans/human_1", loader.path_to_id(first_path))
+
+    def test_use_extended_ids_when_necessary(self):
+        loader = ImagesLoader.from_tree(self.root_test_dir("input/brightfield"), annotation_extension=".tif")
+        image_names = loader.list_images()
+        self.assertEqual(2, len(image_names))
+        self.assertEqual("view1/BF_frame001", image_names[0])
+        self.assertEqual("view2/BF_frame001", image_names[1])
+        # make sure that gt is read despite being tif
+        self.assertIsNotNone(loader.load_annotation(0))
+        self.assertIsNotNone(loader.load_annotation(1))
 
 
 if __name__ == '__main__':

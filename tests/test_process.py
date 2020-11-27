@@ -19,7 +19,7 @@ class TestProcess(tests.testbase.TestBase):
 
     def test_process_images(self):
         output_dir = self.create_temp_dir()
-        images_loader = sep.loaders.ImagesLoader.from_tree(self.root_test_dir("input/lights"))
+        images_loader = sep.loaders.ImagesLoader.from_tree(self.root_test_dir("input/basics/lights"))
         images_saver = sep.savers.ImagesSaver()
         producer_red = self.Threshold("Red", 0, self.create_temp_dir())
 

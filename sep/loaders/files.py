@@ -21,6 +21,7 @@ class FilesLoader(Loader):
         self.annotation_paths = {}
         self.json_tags = {}
         self.input_order = []
+        self.extended_ids = False
 
     @classmethod
     def from_tree(cls, data_root, input_extensions=None, annotation_suffix="_gt",
@@ -114,21 +115,33 @@ class FilesLoader(Loader):
 
         for input_path, annotation_path, tag_path in itertools.zip_longest(input_rel_paths, annotation_rel_paths, tag_rel_paths):
             input_path = self.data_root / pathlib.Path(input_path)
-            # TODO check for duplicates!
-            self.input_paths[self.path_to_id(input_path)] = input_path
+            sample_id = self.path_to_id(input_path)
+            # check for duplicates
+            if sample_id in self.input_paths:
+                if not self.extended_ids:  # if there is still chance to use extended and get unique ids
+                    self.extended_ids = True
+                    print("The filenames are colliding. Trying again with extended ids option.")
+                    self.set_files(input_rel_paths=input_rel_paths, annotation_rel_paths=annotation_rel_paths,
+                                   tag_rel_paths=tag_rel_paths, validate_list=validate_list)
+                    return
+                else:
+                    raise Exception("Failed to determine unique extended ids for each of the files.")
+
+
+            self.input_paths[sample_id] = input_path
             assert_value(os.path.isfile(input_path), "Specified image does not exist.")
 
             if annotation_path is not None:
                 annotation_path = self.data_root / pathlib.Path(annotation_path)
                 if os.path.isfile(annotation_path):
-                    self.annotation_paths[self.path_to_id(input_path)] = annotation_path
+                    self.annotation_paths[sample_id] = annotation_path
                 else:
                     assert_value(not validate_list, f"Specified annotation file does not exist {annotation_path}.")
 
             if tag_path is not None:
                 tag_path = self.data_root / pathlib.Path(tag_path)
                 if os.path.isfile(tag_path):
-                    self.json_tags[self.path_to_id(input_path)] = tag_path
+                    self.json_tags[sample_id] = tag_path
                 else:
                     assert_value(not validate_list, f"Specified tag file does not exist {tag_path}.")
             # TODO this should save those missing paths so that it can be filled out in Annotator or Tagger
@@ -173,8 +186,11 @@ class FilesLoader(Loader):
         with open(listing_path, "w") as listing_file:
             listing_file.writelines(data_lines)
 
-    def path_to_id(self, path):
-        return path.stem  # TODO this may not be unique, we may use ids from tags instead
+    def path_to_id(self, path: pathlib.Path):
+        # TODO this still may not be unique, we may use ids from tags instead
+        if self.extended_ids:
+            return path.parent.stem + "/" + path.stem
+        return path.stem
 
     def list_images(self):
         return list(self.input_order)
