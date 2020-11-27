@@ -187,6 +187,34 @@ class TestImagesLoader(TestBase):
         self.assertIsNotNone(loader.load_annotation(0))
         self.assertIsNotNone(loader.load_annotation(1))
 
+    def test_custom_annotation_mapping(self):
+        loader = ImagesLoader.from_tree(self.root_test_dir("input/brightfield/view1"),
+                                        annotation_suffix=None,
+                                        annotation_for_image_finder=lambda p: p.stem + "_gt.tif")
+        # Find annotation to the input image but assumed that annotation is a sample on her own.
+        image_names = loader.list_images()
+        self.assertEqual(2, len(image_names))
+        self.assertEqual("BF_frame001", image_names[0])
+        self.assertEqual("BF_frame001_gt", image_names[1])
+        self.assertIsNotNone(loader.load_annotation(0))
+        self.assertIsNone(loader.load_annotation(1))
+
+        loader = ImagesLoader.from_tree(self.root_test_dir("input/brightfield/view1"),
+                                        annotation_suffix=None,
+                                        annotation_checker=lambda p: p.stem.endswith("_gt"),
+                                        annotation_for_image_finder=lambda p: p.stem + "_gt.tif")
+        # Now finds proper dataset.
+        image_names = loader.list_images()
+        self.assertEqual(1, len(image_names))
+        self.assertEqual("BF_frame001", image_names[0])
+        self.assertIsNotNone(loader.load_annotation(0))
+
+
+
+
+
+        pass
+
 
 if __name__ == '__main__':
     unittest.main()

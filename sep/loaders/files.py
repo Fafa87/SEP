@@ -24,8 +24,10 @@ class FilesLoader(Loader):
         self.extended_ids = False
 
     @classmethod
-    def from_tree(cls, data_root, input_extensions=None, annotation_suffix="_gt",
-                  annotation_extension=".png", annotation_for_image_finder: t.Callable[[pathlib.Path], str] = None,
+    def from_tree(cls, data_root, input_extensions=None,
+                  annotation_suffix="_gt", annotation_extension=".png",
+                  annotation_checker: t.Callable[[pathlib.Path], bool] = None,
+                  annotation_for_image_finder: t.Callable[[pathlib.Path], str] = None,
                   verbose=0):
         """
         Initialize loader that uses pairs of files as samples.
@@ -44,23 +46,31 @@ class FilesLoader(Loader):
             input_extensions: extensions of the input image file (default: [".tif", ".png", ".jpg"])
             annotation_suffix: suffix of the annotation files, if None it is not used in filtering
             annotation_extension: extension of the annotation files, used only when annotation_for_image_finder is None
+            annotation_checker: custom function that determines if the given path represents annotations
+                if not None then it overrides check based on annotation_suffix
             annotation_for_image_finder: custom function that determines path of the corresponding annotation,
                 overrides annotation_extension
             verbose: if non-zero additional summaries are printed
         """
         self = cls(data_root, verbose=verbose)
         self.input_extensions = input_extensions or [".tif", ".png", ".jpg"]
+        self.annotation_checker = annotation_checker
+        if self.annotation_checker is None:
+            self.annotation_checker = lambda p: annotation_suffix is not None and p.stem.endswith(annotation_suffix)
+
         self.annotation_for_image_finder = annotation_for_image_finder
         all_files = [pathlib.Path(p) for p in sorted(glob(os.path.join(data_root, "**", "*.*"), recursive=True))]
 
         input_images_paths = [f for f in all_files
-                              if f.suffix.lower() in self.input_extensions and not f.stem.endswith(annotation_suffix)]
+                              if f.suffix.lower() in self.input_extensions and not self.annotation_checker(f)]
         annotation_paths = []
         json_tags = []
         for input_path in input_images_paths:
             if self.annotation_for_image_finder:
                 annotation_paths.append(self.annotation_for_image_finder(input_path))
             else:
+                assert_arg(annotation_extension is not None,
+                           "annotation_extension has to be not None if annotation_for_image_finder is None.")
                 annotation_paths.append(input_path.with_name(input_path.stem + annotation_suffix + annotation_extension))
 
             json_path = input_path.with_suffix(".json")
@@ -126,7 +136,6 @@ class FilesLoader(Loader):
                     return
                 else:
                     raise Exception("Failed to determine unique extended ids for each of the files.")
-
 
             self.input_paths[sample_id] = input_path
             assert_value(os.path.isfile(input_path), "Specified image does not exist.")
@@ -230,7 +239,7 @@ class FilesLoader(Loader):
         path_to_file = self.__get_file_path(self.annotation_paths, name_or_num)
         if path_to_file is None:
             return None
-        return path_to_file
+        return pathlib.Path(path_to_file)
 
     def __str__(self):
         return f"FileLoader for: {self.data_root}"
