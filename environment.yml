@@ -1,9 +1,9 @@
-name: sep_3_6
+name: sep_3_7
 channels:
   - conda-forge
   - defaults
 dependencies:
-  - python=3.6
+  - python=3.7
   - pip
   - numpy
   - fire
@@ -20,5 +20,5 @@ dependencies:
   - pip:
     - pafy
     - youtube_dl
-prefix: C:\Users\Fafa\miniconda3\envs\sep_3_6
+prefix: C:\Users\Fafa\miniconda3\envs\sep_3_7
 

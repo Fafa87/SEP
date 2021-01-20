@@ -53,6 +53,7 @@ class FilesLoader(Loader):
             verbose: if non-zero additional summaries are printed
         """
         self = cls(data_root, verbose=verbose)
+        self.preserve_order = False
         self.input_extensions = input_extensions or [".tif", ".png", ".jpg"]
         self.annotation_checker = annotation_checker
         if self.annotation_checker is None:
@@ -80,7 +81,7 @@ class FilesLoader(Loader):
         return self
 
     @classmethod
-    def from_listing(cls, data_root, filepath, verbose=0, validate_list=False):
+    def from_listing(cls, data_root, filepath, verbose=0, validate_list=False, preserve_order=True):
         """
         Initialize loader that uses pairs of files as samples.
         It uses provided listing file to find those files starting from data_root.
@@ -94,13 +95,15 @@ class FilesLoader(Loader):
                     - optional path to tag file
                 Example: "humans/human_1.tif, humans/human_1_gt.png, humans/human_1.json"
             verbose: if non-zero additional summaries are printed
-            validate_list: if True then each of the files in the listing has to exist. Otherwise only input image is checked.
+            validate_list: if True then each of the files in the listing has to exist. Otherwise only input image is checked
+            preserve_order: if True then original listing order will be preserved
         """
         self = cls(data_root, verbose=verbose)
         self.listing_filepath = filepath
+        self.preserve_order = preserve_order
 
         with open(filepath, "r") as listing_file:
-            samples = listing_file.readlines()
+            samples = [l.strip() for l in listing_file.readlines() if l.strip()]
 
         input_rel_paths = []
         annotation_rel_paths = []
@@ -138,7 +141,7 @@ class FilesLoader(Loader):
                     raise Exception("Failed to determine unique extended ids for each of the files.")
 
             self.input_paths[sample_id] = input_path
-            assert_value(os.path.isfile(input_path), "Specified image does not exist.")
+            assert_value(not validate_list or os.path.isfile(input_path), f"Specified image does not exist: f{input_path}")
 
             if annotation_path is not None:
                 annotation_path = self.data_root / pathlib.Path(annotation_path)
@@ -155,11 +158,12 @@ class FilesLoader(Loader):
                     assert_value(not validate_list, f"Specified tag file does not exist {tag_path}.")
             # TODO this should save those missing paths so that it can be filled out in Annotator or Tagger
 
-        self.input_order = sorted(self.input_paths.keys())
+        self.input_order = list(self.input_paths.keys()) if self.preserve_order else sorted(self.input_paths.keys())
         if self.verbose:
             self.show_summary()
 
     def show_summary(self):
+        print(self)
         print(f"Found {len(self.input_paths)} images.")
         print(f"Found {len(self.annotation_paths)} annotations.")
         print(f"Found {len(self.json_tags)} tags.")

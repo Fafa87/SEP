@@ -66,6 +66,12 @@ class MoviesLoader(Loader):
         self.generate_frames(files_loader)
         return self
 
+    def show_summary(self):
+        print(self)
+        print(f"Found {len(self.input_paths)} input frames.")
+        print(f"Found {len(self.annotation_paths)} annotation frames.")
+        print(f"Found {len(self.json_tags)} tags.")
+
     def generate_frames(self, files_loader: FilesLoader):
         self.input_paths = {}
         self.annotation_paths = {}
