@@ -41,19 +41,21 @@ def filter_loader_manual(data_loader: sep.loaders.FilesLoader, save_tags=False):
 
     print(f"Manual inspection rejected {len(rejected_samples)} samples.")
     if len(rejected_samples):
-        print(f"For example: {', '.join(rejected_samples)}")
+        print(f"List: {', '.join(rejected_samples)}")
     data_loader.filter_files(non_rejected_samples)
     assert len(data_loader) == len(non_rejected_samples)
     print(f"Now loader has {len(data_loader)} samples.")
 
 
-def filter_dataset_listing(data_root, listing_path, output_path, verbose=1, add_tag_path=True, ensure_samples_exist=True):
+def filter_dataset_listing(data_root, listing_path, output_path, verbose=1,
+                           add_tag_path=True, ensure_samples_exist=True, preserve_order=True):
     if verbose:
         print(f"Filtering listing file {listing_path}.")
         print(f"The data root for dataset is {data_root}.")
         print(f"The new filtered listing (without rejected samples) will be saved to {output_path}.")
 
-    loader = sep.loaders.ImagesLoader.from_listing(data_root, listing_path, verbose=1, validate_list=ensure_samples_exist)
+    loader = sep.loaders.ImagesLoader.from_listing(data_root, listing_path,
+                                                   verbose=1, validate_list=ensure_samples_exist, preserve_order=preserve_order)
     filter_loader_manual(loader)
     loader.save(output_path, add_tag_path)
 

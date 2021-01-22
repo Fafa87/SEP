@@ -33,7 +33,7 @@ class Inspector:
         return self.current_tags_state[sample_num]
 
     def get_labels_or_empty(self, sample_num):
-        annotation = self.samples_collection[0]['annotation']
+        annotation = self.samples_collection[sample_num]['annotation']
         if annotation is None:  # fill in with dummy
             image = self.samples_collection[sample_num]['image']
             annotation = np.zeros(get_2d_size(image), dtype=np.uint8)
@@ -107,6 +107,10 @@ def add_review_option(inspector):
     def reject_move_key(event=None):
         tags_properties.Review.value = ReviewEnum.Rejected
         inspector.viewer.keymap['C']()  # move to the next
+
+    @inspector.viewer.bind_key('`')
+    def back_move_key(event=None):
+        inspector.viewer.keymap['Z']()  # move to the next
 
     inspector.viewer.window.add_dock_widget(tags_properties)
 
