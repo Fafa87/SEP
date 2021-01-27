@@ -35,16 +35,16 @@ class TestVideoReader(TestBase):
         processed_path = self.add_temp("my_movie.mp4")
 
         thresholded = []
-        with sep._commons.movies.StreamReader(video_path) as video:  # H264
-            with sep._commons.movies.VideoWriter(processed_path, related_reader=video, encoding='H264') as writer:
+        with sep._commons.movies.StreamReader(video_path) as video:
+            with sep._commons.movies.VideoWriter(processed_path, related_reader=video) as writer:
                 for image in itertools.islice(video, 0, 5):
                     thresholded.append(image.max(axis=-1) > 128)
                     writer.add(thresholded[-1], accept_bool=True)  # as bool
 
         with sep._commons.movies.StreamReader(processed_path) as video:
             third_processed = video[2]
-            # It is not exact?? Compression??
-            nptest.assert_allclose(thresholded[2] * 255, third_processed[..., 0], atol=5)
+            # Beware that this may not be precise dure to compression.
+            nptest.assert_equal(thresholded[2], third_processed[..., 0] > 128)
 
     def test_writer_data_types(self):
         written_path = self.add_temp("my_movie.mp4")
