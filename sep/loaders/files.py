@@ -110,9 +110,10 @@ class FilesLoader(Loader):
         tag_rel_paths = []
         for line_sample in samples:
             sample = [t.strip() for t in line_sample.split(",")]
-            input_rel_paths.append(sample[0])
-            annotation_rel_paths.append(None if len(sample) <= 1 else sample[1])
-            tag_rel_paths.append(None if len(sample) <= 2 else sample[2])
+            # make sure that it handles windows slashes on unix
+            input_rel_paths.append(ensure_posix_path_str(sample[0]))
+            annotation_rel_paths.append(ensure_posix_path_str(None if len(sample) <= 1 else sample[1]))
+            tag_rel_paths.append(ensure_posix_path_str(None if len(sample) <= 2 else sample[2]))
 
         self.set_files(input_rel_paths=input_rel_paths, annotation_rel_paths=annotation_rel_paths, tag_rel_paths=tag_rel_paths,
                        validate_list=validate_list)

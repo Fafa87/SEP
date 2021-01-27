@@ -1,5 +1,6 @@
 import json
 import os
+import pathlib
 
 
 def update_with_suffix(to_update: dict, new_items: dict, prefix: str = '', suffix: str = '') -> dict:
@@ -30,3 +31,9 @@ def assert_arg(arg_assert, arg_name):
 def assert_value(value, description):
     if not value:
         raise ValueError(description)
+
+
+def ensure_posix_path_str(path: str) -> str:
+    if path is None:
+        return None
+    return str(pathlib.Path(pathlib.PureWindowsPath(path).as_posix()))

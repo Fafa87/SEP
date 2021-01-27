@@ -31,6 +31,7 @@ before_install:
       bash $HOME/download/miniconda.sh -b -p $HOME/miniconda;
     fi
 install:
+  - sudo apt-get install libx264-dev
   - source "$HOME/miniconda/etc/profile.d/conda.sh"
   - hash -r
   - conda config --set always_yes yes --set changeps1 no
