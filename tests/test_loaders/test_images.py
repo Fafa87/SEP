@@ -117,7 +117,7 @@ class TestImagesLoader(TestBase):
             listing_file.writelines(f"{Path('humans2/human2_2.tif')}, {Path('humans2/human2_2_gt.png')}\n")
 
         # always fail for missing image TODO TMP think should work but splits have to be handle somehow
-        #with self.assertRaises(ValueError):
+        # with self.assertRaises(ValueError):
         #    ImagesLoader.from_listing(self.root_test_dir("input"), filepath="loader_listing.txt")
 
     def test_listing_load_missing_annotation_tag(self):
@@ -209,11 +209,38 @@ class TestImagesLoader(TestBase):
         self.assertEqual("BF_frame001", image_names[0])
         self.assertIsNotNone(loader.load_annotation(0))
 
+    def test_save_tag_no_tag_file(self):
+        loader = ImagesLoader.from_tree(self.root_test_dir("input/brightfield"), annotation_extension=".tif")
+        sample_name = loader.list_images()[0]
+        sample_image_path = loader.input_paths[sample_name]
+        sample_tag_path = loader.json_tags.get(sample_name)
+        self.assertEqual(sample_tag_path, None)
+        new_tag = {"review": "Rejected"}
+        new_tag['id'] = loader.load_tag(sample_name)['id']
+        loader.save_tag(sample_name, new_tag)
 
+        new_tag_path = loader.json_tags.get(sample_name)
+        self.add_temp(new_tag_path)
+        self.assertEqual(new_tag_path, Path(sample_image_path).with_suffix(".json"))
 
+        # Now reload with new loader
+        loader2 = ImagesLoader.from_tree(self.root_test_dir("input/brightfield"), annotation_extension=".tif")
+        self.assertEqual(new_tag_path, loader2.json_tags.get(sample_name))
+        self.assertDictEqual(new_tag, loader2.load_tag(sample_name))
 
+    def test_save_tag_existing_tag_file(self):
+        loader = ImagesLoader.from_tree(self.root_test_dir("input/basics/humans"))
+        sample_name = loader.list_images()[0]
+        self.assertEqual("human_1", sample_name)
+        sample_tag_path = loader.json_tags.get(sample_name)
+        self.schedule_restoration(sample_tag_path)
+        self.assertIsNotNone(sample_tag_path)
+        new_tag = {"review": "Rejected"}
+        loader.extend_tag(sample_name, new_tag)
 
-        pass
+        # Now reload with new loader
+        loader2 = ImagesLoader.from_tree(self.root_test_dir("input/basics/humans"), annotation_extension=".tif")
+        self.assertSubset(loader2.load_tag(sample_name), new_tag)
 
 
 if __name__ == '__main__':

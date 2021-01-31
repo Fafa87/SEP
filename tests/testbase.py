@@ -10,6 +10,7 @@ import unittest
 class TestBase(unittest.TestCase):
     def setUp(self):
         self.to_clear = []
+        self.to_restore = {}
 
     def tearDown(self):
         for path in self.to_clear:
@@ -18,6 +19,13 @@ class TestBase(unittest.TestCase):
                     os.remove(path)
                 else:
                     shutil.rmtree(path)
+        for file_copy, original_path in self.to_restore.items():
+            shutil.move(file_copy, original_path)
+
+    def schedule_restoration(self, path_to_the_file):
+        temp_backup_file = tempfile.mktemp("_" + os.path.basename(path_to_the_file))
+        shutil.copy(path_to_the_file, temp_backup_file)
+        self.to_restore[temp_backup_file] = path_to_the_file
 
     def save_temp(self, path, image):
         self.to_clear.append(path)

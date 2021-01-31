@@ -74,7 +74,7 @@ class FilesLoader(Loader):
                            "annotation_extension has to be not None if annotation_for_image_finder is None.")
                 annotation_paths.append(input_path.with_name(input_path.stem + annotation_suffix + annotation_extension))
 
-            json_path = input_path.with_suffix(".json")
+            json_path = self.suggest_json_path(input_path)
             json_tags.append(json_path)
 
         self.set_files(input_rel_paths=input_images_paths, annotation_rel_paths=annotation_paths, tag_rel_paths=json_tags)
@@ -163,6 +163,10 @@ class FilesLoader(Loader):
         if self.verbose:
             self.show_summary()
 
+    def suggest_json_path(self, input_path):
+        # Assume standard json path next to the input file.
+        return pathlib.Path(input_path).with_suffix(".json")
+
     def show_summary(self):
         print(self)
         print(f"Found {len(self.input_paths)} images.")
@@ -225,15 +229,30 @@ class FilesLoader(Loader):
 
     def load_image(self, name_or_num) -> pathlib.Path:
         path_to_file = self.__get_file_path(self.input_paths, name_or_num)
-        return path_to_file
+        return pathlib.Path(path_to_file)
+
+    def save_tag(self, name_or_num, new_tag):
+        assert "id" in new_tag
+
+        if isinstance(name_or_num, int):
+            name = self.input_order[name_or_num]
+        else:
+            name = name_or_num
+
+        path_to_file = self.__get_file_path(self.json_tags, name)
+        if path_to_file is None:
+            input_path = self.__get_file_path(self.input_paths, name)
+            path_to_file = self.suggest_json_path(input_path)
+            self.json_tags[name] = path_to_file
+
+        save_json(self.json_tags[name], new_tag)
 
     def load_tag(self, name_or_num):
         path_to_file = self.__get_file_path(self.json_tags, name_or_num)
         if path_to_file is None:
             return {"id": name_or_num}
         else:
-            with open(str(path_to_file), 'r') as f:
-                tag = json.load(f)
+            tag = load_json(path_to_file)
             assert "id" in tag
             return tag
 

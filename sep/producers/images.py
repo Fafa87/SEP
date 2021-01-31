@@ -26,8 +26,7 @@ class ImagesProducer(Producer, ABC):
 
     def load_tag(self, id):
         cache_path = (self.cache_root / str(id)).with_suffix(".json")
-        with open(str(cache_path), 'r') as f:
-            return json.load(f)
+        return load_json(cache_path)
 
     def __save_segment(self, id, segm):
         cache_path = (self.cache_root / str(id)).with_suffix(".tif")

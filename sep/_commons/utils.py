@@ -17,6 +17,11 @@ def union(*data: dict):
     return {k: v for d in data for k, v in d.items()}
 
 
+def load_json(path_to_file):
+    with open(str(path_to_file), 'r') as f:
+        return json.load(f)
+
+
 def save_json(path, *data: dict):
     os.makedirs(os.path.dirname(str(path)), exist_ok=True)
     with open(str(path), 'w') as f:
