@@ -37,6 +37,11 @@ class Loader(ABC):
     def save_tag(self, name_or_num, new_tag):
         pass
 
+    def extend_tag(self, name_or_num, tag_extensions: dict):
+        current_tags = self.load_tag(name_or_num)
+        current_tags.update(tag_extensions)
+        self.save_tag(name_or_num, current_tags)
+
     def __iter__(self):
         for i in range(len(self)):
             yield self[i]
