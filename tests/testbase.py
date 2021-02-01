@@ -63,6 +63,9 @@ class TestBase(unittest.TestCase):
         bottom = position[1] + radius
         image[top: bottom + 1, left: right + 1] = value
 
+    def random_uint(self, shape2d):
+        return (np.random.random(shape2d) * 255).astype(np.uint8)
+
     def random_rgb(self, shape2d):
         return (np.random.random(shape2d + (3,)) * 255).astype(np.uint8)
 

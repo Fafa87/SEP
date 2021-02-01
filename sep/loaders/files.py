@@ -22,6 +22,7 @@ class FilesLoader(Loader):
         self.json_tags = {}
         self.input_order = []
         self.extended_ids = False
+        self.annotation_for_image_finder = None
 
     @classmethod
     def from_tree(cls, data_root, input_extensions=None,
@@ -60,6 +61,11 @@ class FilesLoader(Loader):
             self.annotation_checker = lambda p: annotation_suffix is not None and p.stem.endswith(annotation_suffix)
 
         self.annotation_for_image_finder = annotation_for_image_finder
+        if self.annotation_for_image_finder is None:
+            assert_arg(annotation_extension is not None,
+                       "annotation_extension has to be not None if annotation_for_image_finder is None.")
+            self.annotation_for_image_finder = lambda p: p.with_name(p.stem + annotation_suffix + annotation_extension)
+
         all_files = [pathlib.Path(p) for p in sorted(glob(os.path.join(data_root, "**", "*.*"), recursive=True))]
 
         input_images_paths = [f for f in all_files
@@ -67,13 +73,7 @@ class FilesLoader(Loader):
         annotation_paths = []
         json_tags = []
         for input_path in input_images_paths:
-            if self.annotation_for_image_finder:
-                annotation_paths.append(self.annotation_for_image_finder(input_path))
-            else:
-                assert_arg(annotation_extension is not None,
-                           "annotation_extension has to be not None if annotation_for_image_finder is None.")
-                annotation_paths.append(input_path.with_name(input_path.stem + annotation_suffix + annotation_extension))
-
+            annotation_paths.append(self.annotation_for_image_finder(input_path))
             json_path = self.suggest_json_path(input_path)
             json_tags.append(json_path)
 
@@ -176,11 +176,10 @@ class FilesLoader(Loader):
     def filter_files(self, names_or_nums):
         new_input_order = []
         for name_or_num in names_or_nums:
-            if isinstance(name_or_num, int):
-                name_or_num = self.input_order[name_or_num]
-            new_input_order.append(name_or_num)
-            input_path = self.input_paths.get(name_or_num, None)
-            assert_arg(input_path is not None, f"{name_or_num} does not exist in FileLoader.")
+            name = self.get_name(name_or_num)
+            new_input_order.append(name)
+            input_path = self.input_paths.get(name, None)
+            assert_arg(input_path is not None, f"{name} does not exist in FileLoader.")
         self.input_order = new_input_order
 
     def get_relative_paths(self, name_or_num):
@@ -204,6 +203,9 @@ class FilesLoader(Loader):
         with open(listing_path, "w") as listing_file:
             listing_file.writelines(data_lines)
 
+    def get_name(self, name_or_num):
+        return self.input_order[name_or_num] if isinstance(name_or_num, int) else name_or_num
+
     def path_to_id(self, path: pathlib.Path):
         # TODO this still may not be unique, we may use ids from tags instead
         if self.extended_ids:
@@ -217,28 +219,24 @@ class FilesLoader(Loader):
         return [self.input_paths[p] for p in self.input_order]
 
     def __get_file_path(self, path_set, name_or_num, relative=False):
-        if isinstance(name_or_num, int):
-            name_or_num = self.input_order[name_or_num]
-        if isinstance(name_or_num, str):
-            file_path = path_set.get(name_or_num, None)
+        name = self.get_name(name_or_num)
+        if isinstance(name, str):
+            file_path = path_set.get(name, None)
             if relative and file_path is not None:
                 file_path = os.path.relpath(file_path, self.data_root)
             return file_path
         else:
-            raise NotImplemented(type(name_or_num))
+            raise NotImplemented(type(name))
 
     def load_image(self, name_or_num) -> pathlib.Path:
         path_to_file = self.__get_file_path(self.input_paths, name_or_num)
+        assert_value(path_to_file is not None, f"Image {name_or_num} does not exist in the loader.")
         return pathlib.Path(path_to_file)
 
     def save_tag(self, name_or_num, new_tag):
         assert "id" in new_tag
 
-        if isinstance(name_or_num, int):
-            name = self.input_order[name_or_num]
-        else:
-            name = name_or_num
-
+        name = self.get_name(name_or_num)
         path_to_file = self.__get_file_path(self.json_tags, name)
         if path_to_file is None:
             input_path = self.__get_file_path(self.input_paths, name)

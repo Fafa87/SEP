@@ -3,7 +3,8 @@ import os
 import unittest
 from pathlib import Path
 
-from sep.loaders.images import ImagesLoader
+import sep._commons.imgutil as imgutil
+from sep.loaders.images import ImagesLoader, SepCannotDetermineAnnotationPathError
 from tests.testbase import TestBase
 
 
@@ -241,6 +242,55 @@ class TestImagesLoader(TestBase):
         # Now reload with new loader
         loader2 = ImagesLoader.from_tree(self.root_test_dir("input/basics/humans"), annotation_extension=".tif")
         self.assertSubset(loader2.load_tag(sample_name), new_tag)
+
+    def test_save_annotation_no_path(self):
+        # Based on tree mode
+        loader = ImagesLoader.from_tree(self.root_test_dir("input/giraffes"), input_extensions=".jpg")
+        self.assertEqual(3, len(loader))
+        sample_name = "giraffes_001"
+        giraffes_001_sample = loader[sample_name]
+
+        new_annotation = self.random_uint(imgutil.get_2d_size(giraffes_001_sample['image']))
+        self.assertIsNone(loader.load_annotation(sample_name))
+        loader.save_annotation(sample_name, new_annotation)
+        self.np_assert_equal(new_annotation, loader.load_annotation(sample_name))  # reload and compare
+        self.add_temp(loader.annotation_paths[sample_name])
+
+        # Now reload with new loader
+        loader2 = ImagesLoader.from_tree(self.root_test_dir("input/giraffes"), input_extensions=".jpg")
+        nptest.assert_equal(new_annotation, loader2.load_annotation(sample_name))
+
+        # Now try to use same in listing and fail.
+        loader_listing = ImagesLoader.from_listing(self.root_test_dir("input/basics"),
+                                                   filepath=self.root_test_dir("input/picky_images.txt"))
+        sample_name = "lights02"
+        lights02_sample = loader_listing[sample_name]
+        new_annotation = self.random_uint(imgutil.get_2d_size(lights02_sample['image']))
+        self.assertIsNone(loader_listing.load_annotation(sample_name))
+        with self.assertRaises(SepCannotDetermineAnnotationPathError):
+            loader_listing.save_annotation(sample_name, new_annotation)
+
+        # Now provide explicit new path for annotations.
+        # TODO
+
+    def test_save_annotation_existing_path(self):
+        loader = ImagesLoader.from_listing(self.root_test_dir("input/basics"),
+                                           filepath=self.root_test_dir("input/picky_images.txt"))
+        sample_name = "lights01"
+        lights01_sample = loader[sample_name]
+        new_annotation = self.random_uint(imgutil.get_2d_size(lights01_sample['image']))
+        old_annotation = lights01_sample['annotation']
+        self.assertIsNotNone(old_annotation)
+        self.np_assert_not_equal(new_annotation, old_annotation)
+        self.schedule_restoration(loader.annotation_paths[sample_name])
+
+        loader.save_annotation(sample_name, new_annotation)
+        nptest.assert_equal(new_annotation, loader.load_annotation(sample_name))
+
+        # Now reload with new loader
+        loader2 = ImagesLoader.from_listing(self.root_test_dir("input/basics"),
+                                            filepath=self.root_test_dir("input/picky_images.txt"))
+        nptest.assert_equal(new_annotation, loader2.load_annotation(sample_name))
 
 
 if __name__ == '__main__':

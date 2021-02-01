@@ -42,3 +42,7 @@ def ensure_posix_path_str(path: str) -> str:
     if path is None:
         return None
     return str(pathlib.Path(pathlib.PureWindowsPath(path).as_posix()))
+
+
+class SepException(Exception):
+    pass
