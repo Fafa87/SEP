@@ -46,7 +46,7 @@ class StreamReader:
         return res
 
     def move_to_item(self, item):
-        if self.current_frame > item:
+        if self.current_frame > item or item > self.current_frame + 500:
             self.reader.set(cv2.CAP_PROP_POS_FRAMES, item)
         else:
             while self.current_frame < item:

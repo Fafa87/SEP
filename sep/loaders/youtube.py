@@ -1,12 +1,11 @@
 import traceback
 
 import numpy as np
-import os
 import pafy
-import pathlib
 import typing as t
 
 import sep.loaders
+from sep.loaders.movies import FrameSelector
 from sep._commons.movies import StreamReader
 from sep._commons.utils import *
 from sep.loaders.loader import Loader
@@ -16,18 +15,14 @@ class YoutubeLoader(Loader):
     """
     This one loads frames from youtube video and tags them so that can be used in processing or in dataset extraction.
     """
-
-    def __init__(self, urls, video_quality, framerate, clips_len, clips_skip, skip_first=0, max_frames=1000000, verbose=0):
+    def __init__(self, video_quality, framerate=None, verbose=0):
         super().__init__()
         self.verbose = verbose
         self.video_quality = video_quality
-        self.max_frames = max_frames
-        self.skip_first = skip_first
-        self.youtube_urls = urls
+        self.youtube_urls = []
         self.direct_urls = {}
 
-        self.clips_skip = clips_skip
-        self.clips_len = clips_len
+        self.selector = None
         self.framerate = framerate
         self.video_image_reader: t.Optional[StreamReader] = None
 
@@ -35,40 +30,50 @@ class YoutubeLoader(Loader):
         self.annotation_paths = {}
         self.json_tags = {}
 
+        self.input_order = sorted(self.input_paths.keys())
+
+    @classmethod
+    def from_urls(cls, urls, video_quality, framerate=None, clips_len=1, clips_skip=0, verbose=0):
+        self = cls(video_quality=video_quality, framerate=framerate, verbose=verbose)
+
+        self.selector = sep.loaders.movies.FrameByGroupSelector(clips_len, clips_skip)
         for url in urls:
-            youtube_video = pafy.new(url)
-            streams = [v for v in youtube_video.videostreams if v.notes == video_quality and v.extension == 'mp4']
-            if not streams:
-                print(f"{url} has no video_quality: {video_quality} version. Skipping...")
-                continue
-
-            self.info = {'title': youtube_video.title, 'author': youtube_video.author, 'id': youtube_video.videoid}
-            movie_path = streams[0].url
-            movie_id = youtube_video.videoid
-            movie_tag = self.info
-            self.direct_urls[movie_id] = movie_path
-
-            # Process input data movies.
-            movie_frames = sep.loaders.MoviesLoader.load_movie_images(movie_path, self.framerate,
-                                                                      clips_len=self.clips_len, clips_skip=self.clips_skip)
-            frame_from_that_movie = 0
-            left_to_skip = self.skip_first
-            for frame_id, tag in zip(movie_frames['images'], movie_frames['tags']):
-                if left_to_skip > 0:
-                    left_to_skip -= 1
-                    continue
-                if frame_from_that_movie >= self.max_frames:
-                    continue
-                frame_path = f"{movie_path}{frame_id}"
-                frame_id = f"{movie_id}{frame_id}"
-                tag['id'] = frame_id
-                update_with_suffix(tag, movie_tag, prefix=sep.loaders.MoviesLoader.MOVIE_TAG_PREFIX)
-
-                self.input_paths[frame_id] = frame_path
-                self.json_tags[frame_id] = tag
-                frame_from_that_movie += 1
+            self.add_url(url, self.selector, {})
 
         self.input_order = sorted(self.input_paths.keys())
+        return self
+
+    def add_url(self, url, selector: FrameSelector, user_info: dict = None):
+        if url not in self.youtube_urls:
+            self.youtube_urls.append(url)
+
+        youtube_video = pafy.new(url)
+        user_info = user_info or dict()
+        streams = [v for v in youtube_video.videostreams if v.notes == self.video_quality and v.extension == 'mp4']
+        if not streams:
+            print(f"{url} has no video_quality: {self.video_quality} version. Skipping...")
+            return False
+
+        info = {'title': youtube_video.title, 'author': youtube_video.author, 'id': youtube_video.videoid}
+        movie_path = streams[0].url
+        movie_id = youtube_video.videoid
+        movie_tag = info
+        self.direct_urls[movie_id] = movie_path
+
+        # Process input data movie.
+        movie_frames = sep.loaders.MoviesLoader.load_movie_images(movie_path, self.framerate, selector=selector)
+        for frame_id, tag in zip(movie_frames['images'], movie_frames['tags']):
+            frame_path = f"{movie_path}{frame_id}"
+            frame_id = f"{movie_id}{frame_id}"
+            tag['id'] = frame_id
+            update_with_suffix(tag, movie_tag, prefix=sep.loaders.MoviesLoader.MOVIE_TAG_PREFIX)
+            update_with_suffix(tag, user_info, prefix=sep.loaders.MoviesLoader.USER_TAG_PREFIX)
+
+            self.input_paths[frame_id] = frame_path
+            self.json_tags[frame_id] = tag
+
+        self.input_order = sorted(self.input_paths.keys())
+        return True
 
     def list_movies(self):
         return self.direct_urls.keys()

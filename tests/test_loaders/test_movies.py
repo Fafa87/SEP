@@ -4,7 +4,8 @@ import os
 import unittest
 from pathlib import Path
 
-from sep.loaders import MoviesLoader
+import sep.loaders.movies
+from sep.loaders import MoviesLoader, FrameByGroupSelector, FrameByIntervalSelector
 from tests.testbase import TestBase
 
 
@@ -72,19 +73,21 @@ class TestMoviesLoader(TestBase):
                 return
 
     def test_load_movie_images(self):
+        frame_selector = sep.loaders.movies.FrameByGroupSelector(clips_len=100000, clips_skip=30)
         loaded_frames = MoviesLoader.load_movie_images(self.root_test_dir("input/reptiles/Dinosaur - 1438.mp4"),
-                                                       framerate=30, clips_len=100000, clips_skip=30)
+                                                       framerate=30, selector=frame_selector)
         loaded_images = loaded_frames['images']
         loaded_tags = loaded_frames['tags']
         self.assertEqual(157, len(loaded_images))
         self.assertEqual(157, len(loaded_tags))
 
         loaded_frames = MoviesLoader.load_movie_images(self.root_test_dir("input/reptiles/Dinosaur - 1438.mp4"),
-                                                       framerate=None, clips_len=100000, clips_skip=30)
+                                                       framerate=None, selector=frame_selector)
         self.assertEqual(157, len(loaded_frames['images']))
 
+        frame_selector = sep.loaders.movies.FrameByGroupSelector(clips_len=2, clips_skip=10)
         loaded_frames = MoviesLoader.load_movie_images(self.root_test_dir("input/reptiles/Dinosaur - 1438.mp4"),
-                                                       framerate=None, clips_len=2, clips_skip=10)
+                                                       framerate=None, selector=frame_selector)
         loaded_tags = loaded_frames['tags']
         self.assertEqual(27, len(loaded_tags))
         self.assertEqual('_00001', loaded_tags[1]['id'])
@@ -140,7 +143,8 @@ class TestMoviesLoader(TestBase):
 
         # now with tag
         with self.create_temp("loader_listing.txt") as listing_file:
-            listing_file.writelines(f"{Path('reptiles/Dragon - 32109.mp4')}, {Path('reptiles/Dragon - 32109_gt.mp4')}, {Path('reptiles/Dragon - 32109.json')}\n")
+            listing_file.writelines(
+                f"{Path('reptiles/Dragon - 32109.mp4')}, {Path('reptiles/Dragon - 32109_gt.mp4')}, {Path('reptiles/Dragon - 32109.json')}\n")
 
         with MoviesLoader.from_listing(self.root_test_dir("input"), filepath="loader_listing.txt",
                                        framerate=10, clips_len=5, clips_skip=10) as test_movies_loader:
@@ -150,6 +154,57 @@ class TestMoviesLoader(TestBase):
             self.assertEqual('dragon_1', tag['movie_id'])
             self.assertEqual('pixabay', tag['movie_source'])
             self.assertIsNone(test_movies_loader.load_annotation(0))
+
+
+class TestFrameSelector(TestBase):
+    def test_frame_group_selector(self):
+        data = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+        selector = FrameByGroupSelector(clips_len=2, clips_skip=1, skip_first=0, skip_last=0)
+        self.assertEqual([([1, 2], 0), ([4, 5], 1), ([7, 8], 2), ([10], 3)], list(selector.select(data)))
+        selector = FrameByGroupSelector(clips_len=2, clips_skip=1, skip_first=1, skip_last=3)
+        self.assertEqual([([2, 3], 0), ([5, 6], 1)], list(selector.select(data)))
+
+    def test_frame_interval_selector(self):
+        data = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+        selector = FrameByIntervalSelector(frames_to_extract=1, interval_start_time=1, interval_end_time=10)
+        self.assertEqual([([6], 0)], list(selector.select(data)))
+
+        selector = FrameByIntervalSelector(frames_to_extract=20, interval_start_time=1, interval_end_time=10)
+        self.assertEqual(20, len(list(selector.select(data))))  # let it repeat itself
+
+        selector = FrameByIntervalSelector(frames_to_extract=2, interval_start_time=1, interval_end_time=10)
+        self.assertEqual([([4], 0), ([7], 1)], list(selector.select(data)))
+
+        selector = FrameByIntervalSelector(frames_to_extract=3, interval_start_time=1, interval_end_time=10)
+        self.assertEqual([([3], 0), ([6], 1), ([8], 2)], list(selector.select(data)))
+
+        selector = FrameByIntervalSelector(frames_to_extract=4, interval_start_time=1, interval_end_time=10)
+        self.assertEqual([([3], 0), ([5], 1), ([7], 2), ([9], 3)], list(selector.select(data)))
+
+        selector = FrameByIntervalSelector(frames_to_extract=5, interval_start_time=1, interval_end_time=10)
+        self.assertEqual([([2], 0), ([4], 1), ([6], 2), ([7], 3), ([9], 4)], list(selector.select(data)))
+
+        selector = FrameByIntervalSelector(frames_to_extract=2, interval_start_time=3, interval_end_time=7)
+        self.assertEqual([([4], 0), ([6], 1)], list(selector.select(data)))
+
+    def test_frame_interval_selector_with_framerate(self):
+        data = list(range(0, 30 * 5))
+
+        selector = FrameByIntervalSelector(frames_to_extract=1, interval_start_time=1.7, interval_end_time=3.5)
+        times = [2.6]
+        frames = [([t * 30], i) for i, t in enumerate(times)]
+        self.assertEqual(frames, list(selector.select(data, 30)))
+
+        selector = FrameByIntervalSelector(frames_to_extract=3, interval_start_time=1.7, interval_end_time=3.5)
+        # times = [2.15, 2.6, 3.05]  # -> [([64.5], 0), ([78.0], 1), ([91.5], 2)]
+        frames = [([64], 0), ([78], 1), ([92], 2)]
+        self.assertEqual(frames, list(selector.select(data, 30)))
+
+        selector = FrameByIntervalSelector(frames_to_extract=5, interval_start_time=2.1, interval_end_time=4.6)
+        # times = [2.516, 2.932, 3.348, 3.76, 4.18]  # -> [([75.48], 0), ([87.96], 1), ([100.44], 2), ([112.8], 3), ([125.39], 4)]
+        frames = [([75], 0), ([88], 1), ([101], 2), ([113], 3), ([126], 4)]
+        self.assertEqual(frames, list(selector.select(data, 30)))
+
 
 if __name__ == '__main__':
     unittest.main()

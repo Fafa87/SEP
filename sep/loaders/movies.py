@@ -1,13 +1,73 @@
 import traceback
 
+import math
 import numpy as np
-import pathlib
 import typing as t
+from abc import ABC, abstractmethod
 
 from sep._commons.movies import StreamReader
 from sep._commons.utils import *
 from sep.loaders.files import FilesLoader
 from sep.loaders.loader import Loader
+
+
+class FrameSelector(ABC):
+    def __init__(self):
+        pass
+
+    @abstractmethod
+    def select(self, samples_frames: t.List[int], framerate: float = None) -> t.Iterable[t.Tuple[t.List[int], int]]:
+        """
+        Select subset of the provided frame positions.
+        Args:
+            framerate: optional video framerate in frames per sec
+            samples_frames: list of frame positions of the samples
+
+        Returns:
+            The set of clips where each clip is (subset list, clip_id).
+        """
+        pass
+
+
+class FrameByGroupSelector(FrameSelector):
+    def __init__(self, clips_len=99999999, clips_skip=0, skip_first=0, skip_last=0):
+        super().__init__()
+        self.skip_last = skip_last
+        self.skip_first = skip_first
+        self.clips_skip = clips_skip
+        self.clips_len = clips_len
+
+    def select(self, samples_frames: t.List[int], framerate: float = None) -> t.Iterable[t.Tuple[t.List[int], int]]:
+        samples = list(samples_frames[self.skip_first:len(samples_frames) - self.skip_last])
+        clip_nr = 0
+        while samples:
+            yield samples[:self.clips_len], clip_nr
+            del samples[:self.clips_len + self.clips_skip]
+            clip_nr += 1
+
+
+class FrameByIntervalSelector(FrameSelector):
+    def __init__(self, frames_to_extract: int, interval_start_time: float = 0, interval_end_time: float = 99999):
+        super().__init__()
+        self.interval_start = interval_start_time
+        self.interval_end = interval_end_time
+        self.frames_to_extract = frames_to_extract
+
+    def select(self, samples_frames: t.List[int], framerate: float = 1) -> t.Iterable[t.Tuple[t.List[int], int]]:
+        start_pos = math.floor(self.interval_start * framerate)
+        end_pos = math.ceil(self.interval_end * framerate)
+        inside_frames = [s for s in samples_frames if start_pos <= s <= end_pos]
+
+        # Split it into frames_to_extract + 1 spaces.
+        step_float = len(inside_frames) / (self.frames_to_extract + 1)
+        current = step_float
+
+        clip_nr = 0
+        while current < len(inside_frames) and clip_nr < self.frames_to_extract:
+            current_pos = int(current)
+            yield [inside_frames[current_pos]], clip_nr
+            clip_nr += 1
+            current += step_float
 
 
 class MoviesLoader(Loader):
@@ -23,14 +83,14 @@ class MoviesLoader(Loader):
     Beware it is blocking related videos until it is closed.
     """
     MOVIE_TAG_PREFIX = 'movie_'
+    USER_TAG_PREFIX = 'user_'
 
     def __init__(self, data_root, framerate, clips_len=99999999, clips_skip=0, annotation_as_mask=False, verbose=0):
         super().__init__()
         self.annotation_as_mask = annotation_as_mask
         self.data_root = data_root
         self.verbose = verbose
-        self.clips_skip = clips_skip
-        self.clips_len = clips_len
+        self.selector = FrameByGroupSelector(clips_len, clips_skip)
         self.framerate = framerate
         self.video_image_reader: t.Optional[StreamReader] = None
         self.video_annotation_reader: t.Optional[StreamReader] = None
@@ -84,8 +144,7 @@ class MoviesLoader(Loader):
             movie_tag = self.files_loader.load_tag(movie_id)
 
             # Process input data movies.
-            movie_frames = MoviesLoader.load_movie_images(movie_path, self.framerate,
-                                                          clips_len=self.clips_len, clips_skip=self.clips_skip)
+            movie_frames = MoviesLoader.load_movie_images(movie_path, self.framerate, self.selector)
             for frame_id, tag in zip(movie_frames['images'], movie_frames['tags']):
                 frame_path = f"{movie_path}{frame_id}"
                 frame_id = f"{movie_id}{frame_id}"
@@ -97,8 +156,7 @@ class MoviesLoader(Loader):
 
             # Process annotation movies.
             if annotation_movie_path:
-                annotation_frames = MoviesLoader.load_movie_images(annotation_movie_path, self.framerate,
-                                                                   clips_len=self.clips_len, clips_skip=self.clips_skip)
+                annotation_frames = MoviesLoader.load_movie_images(annotation_movie_path, self.framerate, self.selector)
                 for annotation_id in annotation_frames['images']:
                     annotation_path = f"{annotation_movie_path}{annotation_id}"
                     annotation_id = f"{movie_id}{annotation_id}"
@@ -131,24 +189,20 @@ class MoviesLoader(Loader):
             self.video_annotation_reader = None
 
     @staticmethod
-    def load_movie_images(movie_path, framerate: t.Optional[float], clips_len, clips_skip) -> dict:
+    def load_movie_images(movie_path, framerate: t.Optional[float], selector: FrameSelector) -> dict:
         images = []
         tags = []
         with StreamReader(movie_path) as video_reader:
-            framerate = framerate or video_reader.frame_rate
+            original_frame_rate = video_reader.frame_rate
+            framerate = framerate or original_frame_rate
             samples = list(video_reader.pos_samples(framerate))
-            clip_nr = 0
-            while samples:
-                clip = samples[:clips_len]
-                del samples[:clips_len + clips_skip]
 
+            for clip, clip_nr in selector.select(samples, original_frame_rate):
                 images += [f"_{c:05}" for c in clip]
                 for i_c, c in enumerate(clip):
                     tag = {"id": f"_{c:05}", "pos": c, "pos_clip": i_c, "clip_nr": clip_nr,
                            "timestamp": c * video_reader.frame_interval}
                     tags.append(tag)
-
-                clip_nr += 1
         return {'images': images, 'tags': tags}
 
     def list_images_paths(self):

@@ -28,6 +28,14 @@ def save_json(path, *data: dict):
         json.dump(union(*data), f, indent=4, sort_keys=True)
 
 
+def time_to_sec(time: str) -> int:
+    time_tokens = [int(t) for t in time.split(":")]
+    res = 0
+    for v in time_tokens:
+        res = res * 60 + v
+    return res
+
+
 def assert_arg(arg_assert, arg_name):
     if not arg_assert:
         raise ValueError("Invalid parameter: " + arg_name)
