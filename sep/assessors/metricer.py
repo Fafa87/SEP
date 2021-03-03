@@ -19,6 +19,9 @@ class Metricer:
         self.regions = [EntireRegion()]
         self.reports = []
 
+    def reset(self):
+        self.reports = []
+
     def calculate_metrics(self, segmentation: np.ndarray, ground_truth: np.ndarray) -> pd.DataFrame:
         reports = []
         proper_report_columns_order = [metric.name for metric in self.metrics]
@@ -56,7 +59,7 @@ class Metricer:
         return pd.concat(self.reports).fillna('').groupby(['region']).mean()
 
     def report_full(self):
-        return pd.concat(self.reports).fillna('')
+        return pd.concat(self.reports).fillna('').reset_index(drop=True)
 
     def evaluate_image(self, image: np.ndarray, tag: dict, segment: np.ndarray, segment_tag: dict,
                        gt: np.ndarray) -> pd.DataFrame:

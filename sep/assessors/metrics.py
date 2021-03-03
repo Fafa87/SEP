@@ -15,6 +15,10 @@ class Metric(ABC):
     def calculate(self, segmentation: np.ndarray, ground_truth: np.ndarray) -> float:
         pass
 
+    def show(self, segmentation: np.ndarray, ground_truth: np.ndarray) -> float:
+        metric_value = self.calculate(segmentation, ground_truth)
+        print (f"{self}: {metric_value:.4f}")
+
     def __str__(self):
         return self.name
 

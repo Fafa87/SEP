@@ -11,8 +11,8 @@ from tests.testbase import TestBase
 class TestImagesLoader(TestBase):
     def test_loading(self):
         loader = ImagesLoader.from_tree(self.root_test_dir("input/basics/lights"))
-        self.assertEqual(2, len(loader))
-        self.assertEqual(['lights01', 'lights02'], loader.input_order)
+        self.assertEqual(4, len(loader))
+        self.assertEqual(['lights01', 'lights02', 'lights03', 'lights04'], loader.input_order)
 
         input_data_02_by_id = loader.load_image(1)
         input_data_02_by_name = loader.load_image('lights02')
@@ -42,7 +42,7 @@ class TestImagesLoader(TestBase):
     def test_iterate_through(self):
         loader = ImagesLoader.from_tree(self.root_test_dir("input/basics/lights"))
         data = [p for p in loader]
-        self.assertEqual(2, len(data))
+        self.assertEqual(4, len(data))
         second_elem = data[1]
         self.assertIn("image", second_elem)
         self.assertIn("annotation", second_elem)
@@ -51,7 +51,7 @@ class TestImagesLoader(TestBase):
     def test_relative(self):
         loader = ImagesLoader.from_tree(self.root_test_dir("input/basics"))
         data_names = loader.list_images()
-        self.assertEqual(5, len(data_names))
+        self.assertEqual(7, len(data_names))
         self.assertEqual("human_1", data_names[0])
         self.assertEqual(os.path.join("humans", "human_1.tif"), loader.get_relative_path(0))
         self.assertEqual(os.path.join("humans", "human_1.tif"), loader.get_relative_path("human_1"))
@@ -59,7 +59,7 @@ class TestImagesLoader(TestBase):
     def test_listing_save(self):
         loader = ImagesLoader.from_tree(self.root_test_dir("input/basics"))
         data_names = loader.list_images()
-        self.assertEqual(5, len(data_names))
+        self.assertEqual(7, len(data_names))
 
         listing_path = self.add_temp("loader_listing.txt")
         loader.save(listing_path, add_tag_path=False)
@@ -67,7 +67,7 @@ class TestImagesLoader(TestBase):
         # check that there are 5 lines and that they point to the actual files
         with open(listing_path, "r") as listing_file:
             listing_lines = listing_file.readlines()
-        self.assertEqual(5, len(listing_lines))
+        self.assertEqual(7, len(listing_lines))
         self.assertEqual(f"{Path('humans/human_1.tif')}, {Path('humans/human_1_gt.png')}",
                          listing_lines[0].strip())
 
@@ -80,13 +80,15 @@ class TestImagesLoader(TestBase):
 
     def test_listing_filter_load(self):
         loader = ImagesLoader.from_tree(self.root_test_dir("input/basics"))
-        self.assertEqual(5, len(loader.list_images()))
+        self.assertEqual(7, len(loader.list_images()))
         names = loader.list_images()
         loader.filter_files([0, 'human_3', 4])
         with self.assertRaises(ValueError):
             loader.filter_files([0, 'my_image'])
         self.assertEqual(3, len(loader.list_images()))
-        self.assertEqual(names[::2], loader.list_images())
+        self.assertEqual(names[0], loader.list_images()[0])
+        self.assertEqual(names[2], loader.list_images()[1])
+        self.assertEqual(names[4], loader.list_images()[2])
 
         listing_file = self.add_temp("loader_listing.txt")
         loader.save(listing_file, add_tag_path=False)

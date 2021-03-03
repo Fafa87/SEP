@@ -41,3 +41,6 @@ class Producer(ABC):
 
     def __repr__(self):
         return f"{self.__class__} ({self.__dict__})"
+
+    def __str__(self):
+        return f"{self.name}"

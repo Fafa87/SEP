@@ -17,7 +17,7 @@ class TestImagesSaver(TestBase):
 
         saver = ImagesSaver(temp_dir, test_images_loader)
         names = test_images_loader.list_images()
-        self.assertEqual(5, len(names))
+        self.assertEqual(7, len(names))
         self.assertEqual("human_1", names[0])
         known_name = "lights01"
 
