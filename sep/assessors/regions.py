@@ -38,8 +38,8 @@ class Region(ABC):
 
 
 class RegionExpr(Region):
-    def __init__(self, operator, name=None, *regions):
-        name = name or f"Expr[{operator}]({self.regions})"
+    def __init__(self, operator, *regions, name=None):
+        name = name or f"Expr[{operator}]({regions})"
         super().__init__(name)
         self.operator = operator
         self.regions = regions
@@ -116,8 +116,8 @@ class DetailsRegion(Region):
 
 set_standard = [
     EntireRegion(),
-    RegionExpr('~', "No edges pixels", EdgesRegion(2)),  # Edge pixels are disregarded.
-    EdgesRegion(0.02, "Mask precision"),  # Difference near the edge.
-    RegionExpr('~', "Mask robust", EdgesRegion(0.02)),  # Robustness.
-    DetailsRegion(0.05, "Mask details"),  # Details (hand, arms, hair).
+    RegionExpr('~', EdgesRegion(2), name="No edges pixels"),  # Edge pixels are disregarded.
+    EdgesRegion(0.02, name="Mask precision"),  # Difference near the edge.
+    RegionExpr('~', EdgesRegion(0.02), name="Mask robust"),  # Robustness.
+    DetailsRegion(0.05, name="Mask details"),  # Details (hand, arms, hair).
 ]
