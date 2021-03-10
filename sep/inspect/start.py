@@ -2,6 +2,8 @@ import pathlib
 
 import os
 
+# TODO option to copy the notebook to new folder (e.g. where the project is happening)
+
 if __name__ == '__main__':
     inspect_dir = str(pathlib.Path(__file__).parent)
     command = f'cd {inspect_dir}'

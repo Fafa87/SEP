@@ -1,7 +1,8 @@
-from abc import abstractmethod, ABC
-
 import numpy as np
 import skimage.morphology
+from abc import abstractmethod, ABC
+
+from sep._commons.utils import *
 
 
 class Region(ABC):
@@ -23,8 +24,45 @@ class Region(ABC):
     def extract_region(self, ground_truth: np.ndarray) -> np.ndarray:
         pass
 
+    def __invert__(self):
+        return RegionExpr('~', self)
+
+    def __and__(self, other):
+        return RegionExpr('~', self, other)
+
+    def __or__(self, other):
+        return RegionExpr('|', self, other)
+
     def __str__(self):
         return self.name
+
+
+class RegionExpr(Region):
+    def __init__(self, operator, name=None, *regions):
+        name = name or f"Expr[{operator}]({self.regions})"
+        super().__init__(name)
+        self.operator = operator
+        self.regions = regions
+
+    def regionize(self, ground_truth: np.ndarray, mask: np.ndarray) -> np.ndarray:
+        if self.operator == '|':
+            return self.regions[0].regionize(ground_truth, mask) | self.regions[1].regionize(ground_truth, mask)
+        elif self.operator == '&':
+            return self.regions[0].regionize(ground_truth, mask) & self.regions[1].regionize(ground_truth, mask)
+        elif self.operator == '~':
+            return ~self.regions[0].regionize(ground_truth, mask)
+        else:
+            assert_arg(False, self.operator)
+
+    def extract_region(self, ground_truth: np.ndarray) -> np.ndarray:
+        if self.operator == '|':
+            return self.regions[0].extract_region(ground_truth) | self.regions[1].extract_region(ground_truth)
+        elif self.operator == '&':
+            return self.regions[0].extract_region(ground_truth) & self.regions[1].extract_region(ground_truth)
+        elif self.operator == '~':
+            return ~self.regions[0].extract_region(ground_truth)
+        else:
+            assert_arg(False, self.operator)
 
 
 class EntireRegion(Region):
@@ -74,3 +112,12 @@ class DetailsRegion(Region):
             selem = skimage.morphology.disk(self.edge_size)
         opened = skimage.morphology.binary_opening(ground_truth, selem)
         return (ground_truth > 0) > opened
+
+
+set_standard = [
+    EntireRegion(),
+    RegionExpr('~', "No edges pixels", EdgesRegion(2)),  # Edge pixels are disregarded.
+    EdgesRegion(0.02, "Mask precision"),  # Difference near the edge.
+    RegionExpr('~', "Mask robust", EdgesRegion(0.02)),  # Robustness.
+    DetailsRegion(0.05, "Mask details"),  # Details (hand, arms, hair).
+]
