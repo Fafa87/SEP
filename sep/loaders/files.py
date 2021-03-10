@@ -1,8 +1,7 @@
-import numbers
 from glob import glob
 
 import itertools
-import pathlib
+import numbers
 import typing as t
 
 from sep._commons.utils import *
@@ -182,6 +181,9 @@ class FilesLoader(Loader):
             input_path = self.input_paths.get(name, None)
             assert_arg(input_path is not None, f"{name} does not exist in FileLoader.")
         self.input_order = new_input_order
+        self.input_paths = subset(self.input_paths, new_input_order)
+        self.annotation_paths = subset(self.annotation_paths, new_input_order)
+        self.json_tags = subset(self.json_tags, new_input_order)
 
     def get_relative_paths(self, name_or_num):
         input_rel_path = self.__get_file_path(self.input_paths, name_or_num, relative=True)

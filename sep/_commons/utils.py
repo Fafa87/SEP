@@ -20,6 +20,11 @@ def get_with_prefix(dict_with_prefix: dict, prefix: str = '', strip_prefix=True)
     return {k[len(prefix):] if strip_prefix else k: v for k, v in dict_with_prefix.items() if k.startswith(prefix)}
 
 
+def subset(base_dictionary: dict, keys_subset):
+    keys_subset = set(keys_subset)
+    return {k: v for k, v in base_dictionary.items() if k in keys_subset}
+
+
 def union(*data: dict):
     return {k: v for d in data for k, v in d.items()}
 

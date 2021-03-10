@@ -83,6 +83,7 @@ class TestImagesLoader(TestBase):
         loader = ImagesLoader.from_tree(self.root_test_dir("input/basics"))
         self.assertEqual(7, len(loader.list_images()))
         names = loader.list_images()
+        loader.show_summary()
         loader.filter_files([0, 'human_3', 4])
         with self.assertRaises(ValueError):
             loader.filter_files([0, 'my_image'])
@@ -105,6 +106,7 @@ class TestImagesLoader(TestBase):
         loader.filter_files(np.array([0, 1], dtype=np.int64))
         loader.filter_files(np.array([0, 1], dtype=np.int32))
         loader.filter_files(np.array([0, 1], dtype=np.int16))
+        loader.show_summary()
 
     def test_listing_load_partial_gt(self):
         with self.create_temp("loader_listing.txt") as listing_file:
