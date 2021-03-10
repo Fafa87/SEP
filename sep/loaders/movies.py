@@ -1,3 +1,4 @@
+import numbers
 import traceback
 
 import math
@@ -227,7 +228,7 @@ class MoviesLoader(Loader):
         return path_to_movie, frame_id
 
     def __get_frame_path(self, path_set, name_or_num):
-        if isinstance(name_or_num, int):
+        if isinstance(name_or_num, numbers.Integral):
             name_or_num = self.input_order[name_or_num]
         if isinstance(name_or_num, str):
             return path_set.get(name_or_num, None)
@@ -253,7 +254,7 @@ class MoviesLoader(Loader):
         return self.video_image_reader[int(frame_nr)]
 
     def load_tag(self, name_or_num):
-        if isinstance(name_or_num, int):
+        if isinstance(name_or_num, numbers.Integral):
             name_or_num = self.input_order[name_or_num]
         return self.json_tags.get(name_or_num, None)
 
@@ -279,7 +280,7 @@ class MoviesLoader(Loader):
 
         Returns: movie_id/frame_id
         """
-        if isinstance(name_or_num, int):
+        if isinstance(name_or_num, numbers.Integral):
             name_or_num = self.input_order[name_or_num]
         movie_id = self.load_tag(name_or_num)['movie_id']
         # TODO in perfect world it would do entire hierarchy up to the movie id

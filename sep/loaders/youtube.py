@@ -1,3 +1,4 @@
+import numbers
 import traceback
 
 import numpy as np
@@ -101,7 +102,7 @@ class YoutubeLoader(Loader):
         return list(self.input_order)
 
     def __get_frame_path(self, path_set, name_or_num):
-        if isinstance(name_or_num, int):
+        if isinstance(name_or_num, numbers.Integral):
             name_or_num = self.input_order[name_or_num]
         if isinstance(name_or_num, str):
             return path_set.get(name_or_num, None)
@@ -117,7 +118,7 @@ class YoutubeLoader(Loader):
         return self.video_image_reader[int(frame_nr)]
 
     def load_tag(self, name_or_num):
-        if isinstance(name_or_num, int):
+        if isinstance(name_or_num, numbers.Integral):
             name_or_num = self.input_order[name_or_num]
         return self.json_tags.get(name_or_num, None)
 
@@ -131,7 +132,7 @@ class YoutubeLoader(Loader):
         return None
 
     def get_relative_path(self, name_or_num):
-        if isinstance(name_or_num, int):
+        if isinstance(name_or_num, numbers.Integral):
             name_or_num = self.input_order[name_or_num]
         youtube_id = self.load_tag(name_or_num)['movie_id']
         return os.path.join(youtube_id, name_or_num)

@@ -1,7 +1,8 @@
-import numpy.testing as nptest
 import os
 import unittest
 from pathlib import Path
+import numpy as np
+import numpy.testing as nptest
 
 import sep._commons.imgutil as imgutil
 from sep.loaders.images import ImagesLoader, SepCannotDetermineAnnotationPathError
@@ -97,6 +98,13 @@ class TestImagesLoader(TestBase):
         loader_reloaded = ImagesLoader.from_listing(self.root_test_dir("input/basics"), filepath=listing_file)
         self.assertEqual(3, len(loader_reloaded.list_images()))
         self.assertEqual(loader.list_images(), loader_reloaded.list_images())
+
+        # check filter using other int types
+        loader.filter_files([0, 1])
+        loader.filter_files(np.array([0, 1], dtype=np.int))
+        loader.filter_files(np.array([0, 1], dtype=np.int64))
+        loader.filter_files(np.array([0, 1], dtype=np.int32))
+        loader.filter_files(np.array([0, 1], dtype=np.int16))
 
     def test_listing_load_partial_gt(self):
         with self.create_temp("loader_listing.txt") as listing_file:

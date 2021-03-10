@@ -1,3 +1,4 @@
+import numbers
 from glob import glob
 
 import itertools
@@ -204,7 +205,7 @@ class FilesLoader(Loader):
             listing_file.writelines(data_lines)
 
     def get_name(self, name_or_num):
-        return self.input_order[name_or_num] if isinstance(name_or_num, int) else name_or_num
+        return self.input_order[name_or_num] if isinstance(name_or_num, numbers.Integral) else name_or_num
 
     def path_to_id(self, path: pathlib.Path):
         # TODO this still may not be unique, we may use ids from tags instead
