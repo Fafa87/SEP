@@ -304,6 +304,22 @@ class TestImagesLoader(TestBase):
                                             filepath=self.root_test_dir("input/picky_images.txt"))
         nptest.assert_equal(new_annotation, loader2.load_annotation(sample_name))
 
+    def test_dot_in_names_and_folders(self):
+        loader = ImagesLoader.from_tree(self.root_test_dir("input"))
+        loader.show_summary()
+
+        names_with_ptak = [n for n in loader.list_images() if 'pta' in n]
+        paths_with_ptak = [n for n in loader.list_images_paths() if 'pta' in str(n)]
+        self.assertEqual(3, len(names_with_ptak))
+        print(names_with_ptak)
+        print(paths_with_ptak)
+        for n in names_with_ptak:
+            sample = loader[n]
+            self.assertIsNotNone(sample['image'])
+            self.assertTrue(sample['image'].mean() > 0.1)
+            self.assertIsNotNone(sample['annotation'])
+            self.assertTrue(sample['annotation'].mean() > 0.1)
+
 
 if __name__ == '__main__':
     unittest.main()
