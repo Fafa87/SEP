@@ -43,3 +43,14 @@ def make_rgb(image: np.ndarray):
         return np.stack([image, image, image], axis=-1)
 
     return image
+
+
+def make_2d(image: np.ndarray, strict_duplication=False):
+    if image.ndim == 2:
+        return image
+    elif image.ndim == 3:
+        if strict_duplication:
+            assert_value(np.all(image.mean(axis=2) == image[...,0]), "image has channels with non-equal values")
+        return image.mean(axis=2)
+    else:
+        raise ValueError(f"No way to handle more that 3d data ({image.ndim}).")

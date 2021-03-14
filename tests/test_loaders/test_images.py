@@ -313,8 +313,10 @@ class TestImagesLoader(TestBase):
         self.assertEqual(3, len(names_with_ptak))
         print(names_with_ptak)
         print(paths_with_ptak)
+        expected_names = ['ptak.sep/kasia.imi_06148fb', 'ptak.sep/kasia.imi_06157fb', 'ptak.sep/sep-plowy']
         for n in names_with_ptak:
             sample = loader[n]
+            self.assertIn(n, expected_names)
             self.assertIsNotNone(sample['image'])
             self.assertTrue(sample['image'].mean() > 0.1)
             self.assertIsNotNone(sample['annotation'])

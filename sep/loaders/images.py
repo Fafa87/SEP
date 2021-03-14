@@ -21,6 +21,8 @@ class ImagesLoader(FilesLoader):
         if path_to_file is None:
             return None
         annotation_data = imageio.imread(path_to_file)
+        # TODO maybe let user know that it was 3d
+        annotation_data = imgutil.make_2d(annotation_data)
         # TODO ensure that size matches to the load image - maybe checking on demand.
         self.validate_annotation(annotation_data)
         return annotation_data

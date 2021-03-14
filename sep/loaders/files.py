@@ -212,7 +212,7 @@ class FilesLoader(Loader):
     def path_to_id(self, path: pathlib.Path):
         # TODO this still may not be unique, we may use ids from tags instead
         if self.extended_ids:
-            return path.parent.stem + "/" + path.stem
+            return path.parent.name + "/" + path.stem
         return path.stem
 
     def list_images(self):
