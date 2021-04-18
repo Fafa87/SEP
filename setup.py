@@ -2,6 +2,7 @@ import os
 
 import setuptools
 
+# TODO maybe use setuptools_scm to get that and add version.py with current version
 version = os.environ.get("RELEASE_VERSION", "0.0.0")
 
 setuptools.setup(
