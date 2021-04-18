@@ -3,6 +3,9 @@ import os
 import pathlib
 import shutil
 
+inspect_dir_path = pathlib.Path(__file__).parent
+inspect_dir_name = os.path.basename(inspect_dir_path)
+
 
 def _jupyter(inspect_dir):
     command = f'cd {inspect_dir}'
@@ -14,13 +17,13 @@ def _jupyter(inspect_dir):
 
 
 def here():
-    inspect_dir = str(pathlib.Path(__file__).parent)
-    _jupyter(inspect_dir)
+    _jupyter(inspect_dir_path)
 
 
-def from_copy(path_to_copy_inspect_to):
-    shutil.copytree(pathlib.Path(__file__).parent, path_to_copy_inspect_to)
-    _jupyter(path_to_copy_inspect_to)
+def from_copy(dir_to_copy_inspect_to):
+    os.makedirs(dir_to_copy_inspect_to, exist_ok=True)
+    shutil.copytree(pathlib.Path(__file__).parent, os.path.join(dir_to_copy_inspect_to, inspect_dir_name))
+    _jupyter(dir_to_copy_inspect_to)
 
 
 if __name__ == '__main__':
