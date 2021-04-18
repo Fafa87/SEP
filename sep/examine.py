@@ -28,7 +28,7 @@ def filter_loader_manual(data_loader: sep.loaders.FilesLoader, save_tags=False):
     new_tags = inspector.viewer_state['temporary_tags']
 
     # TODO handle some sort of cancel?
-    assert not save_tags, "Not yet implemented"  # TODO
+    assert not save_tags, "Not yet implemented"
 
     all_samples = enumerate(data_loader.list_images())
     rejected_samples = []

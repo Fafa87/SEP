@@ -123,12 +123,7 @@ class YoutubeLoader(Loader):
         return self.json_tags.get(name_or_num, None)
 
     def load_annotation(self, name_or_num) -> t.Optional[pathlib.Path]:
-        path_to_frame = self.__get_frame_path(self.annotation_paths, name_or_num)
-        if path_to_frame is None:
-            return None
-        # TODO read from reader
-        path_to_movie, frame_nr = path_to_frame.rsplit("_", maxsplit=1)
-
+        # I doubt that there will ever be annotation video on youtube :)
         return None
 
     def get_relative_path(self, name_or_num):
