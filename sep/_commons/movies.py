@@ -10,7 +10,7 @@ from sep._commons.utils import *
 
 
 class StreamReader:
-    def __init__(self, input_string)
+    def __init__(self, input_string):
         self.input_string = str(input_string)
         self.frame_num = None
         self.current_frame = 0
