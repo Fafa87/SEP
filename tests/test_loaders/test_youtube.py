@@ -8,6 +8,7 @@ from sep.loaders import YoutubeLoader
 from tests.testbase import TestBase
 
 
+@unittest.skip
 class TestYoutubeLoader(TestBase):
     def test_loading(self):
         with YoutubeLoader.from_urls(['https://www.youtube.com/watch?v=_cLFseR-S50'], '720p',
