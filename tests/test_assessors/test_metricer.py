@@ -24,7 +24,7 @@ class TestMetrics(TestBase):
 class TestMetricer(TestBase):
     class DummyRegion(Region):
         def extract_region(self, ground_truth: np.ndarray) -> np.ndarray:
-            return ground_truth.astype(np.bool)
+            return ground_truth.astype(bool)
 
     def test_basic_metricer(self):
         metricer = Metricer()

@@ -34,7 +34,7 @@ def mix_rgb(red: np.array, green: np.array, blue: np.array):
 
 def make_rgb(image: np.ndarray):
     assert image.ndim >= 2
-    if image.dtype == np.bool or np.issubdtype(image.dtype, np.floating) and image.max() <= 1:
+    if image.dtype == bool or np.issubdtype(image.dtype, np.floating) and image.max() <= 1:
         image = (image * 255)
     if image.dtype != np.uint8:
         image = image.astype(np.uint8)

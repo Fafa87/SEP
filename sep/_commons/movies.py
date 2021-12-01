@@ -122,8 +122,8 @@ class VideoWriter:
             accept_float: convert float 0-1 to uint8
             accept_bool: convert bool to uint8
         """
-        assert accept_bool or not image.dtype == np.bool
-        assert accept_float or not image.dtype == np.float
+        assert accept_bool or not image.dtype == bool
+        assert accept_float or not image.dtype == float
         assert_arg(image.shape[:2] == self.shape, f"image.shape not compatible with {self.shape}")
 
         bgr_array = imgutil.make_rgb(image)[..., ::-1]

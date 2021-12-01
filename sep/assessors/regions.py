@@ -18,7 +18,7 @@ class Region(ABC):
     def regionize(self, ground_truth: np.ndarray, mask: np.ndarray) -> np.ndarray:
         # TODO rethink mask 0-1 vs 0-255 or it may not be a mask?
         relevant_area = self.extract_region(ground_truth)
-        return mask.astype(np.bool) & relevant_area
+        return mask.astype(bool) & relevant_area
 
     @abstractmethod
     def extract_region(self, ground_truth: np.ndarray) -> np.ndarray:
@@ -70,7 +70,7 @@ class EntireRegion(Region):
         super().__init__("Entire image")
 
     def extract_region(self, ground_truth: np.ndarray) -> np.ndarray:
-        return np.ones_like(ground_truth, dtype=np.bool)
+        return np.ones_like(ground_truth, dtype=bool)
 
 
 class EdgesRegion(Region):

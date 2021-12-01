@@ -102,7 +102,7 @@ class TestImagesLoader(TestBase):
 
         # check filter using other int types
         loader.filter_files([0, 1])
-        loader.filter_files(np.array([0, 1], dtype=np.int))
+        loader.filter_files(np.array([0, 1], dtype=int))
         loader.filter_files(np.array([0, 1], dtype=np.int64))
         loader.filter_files(np.array([0, 1], dtype=np.int32))
         loader.filter_files(np.array([0, 1], dtype=np.int16))

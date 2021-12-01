@@ -33,7 +33,7 @@ class TestEvaluate(tests.testbase.TestBase):
         report = metricer.report_full()
 
         self.assertEqual(4, len(report))
-        nptest.assert_equal(report["id"].values, np.array([0, "lights02", 2, 3], dtype=np.object))
+        nptest.assert_equal(report["id"].values, np.array([0, "lights02", 2, 3], dtype=object))
         nptest.assert_equal(report["img_source"].values, ["", "thenet", "", ""])
         nptest.assert_equal(report["region"].values, ["Entire image", "Entire image", "Entire image", "Entire image"])
         self.assertIn("seg_run_time", report.columns)
