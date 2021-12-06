@@ -1,6 +1,8 @@
+from abc import abstractmethod, ABC
+import typing as t
+
 import numpy as np
 import skimage.morphology
-from abc import abstractmethod, ABC
 
 from sep._commons.utils import *
 
@@ -14,6 +16,7 @@ class Region(ABC):
 
     def __init__(self, name):
         self.name = name
+        self.viable_thresh = 0.005
 
     def regionize(self, ground_truth: np.ndarray, mask: np.ndarray) -> np.ndarray:
         # TODO rethink mask 0-1 vs 0-255 or it may not be a mask?
@@ -23,6 +26,21 @@ class Region(ABC):
     @abstractmethod
     def extract_region(self, ground_truth: np.ndarray) -> np.ndarray:
         pass
+
+    def area_fractions(self, ground_truth: np.ndarray) -> t.Tuple[float, float]:
+        """
+        Calculate the region coverage fraction.
+        Returns:
+        (fraction of the input image in regression, fraction of the ground truth in region against entire input_image)
+        """
+        region_array = self.extract_region(ground_truth)
+        region_fractions = region_array.sum() / ground_truth.size
+        annotation_in_region_fractions = ((region_array > 0) * (ground_truth > 0)).sum() / ground_truth.size
+        return region_fractions, annotation_in_region_fractions
+
+    def is_viable_for(self, ground_truth: np.ndarray) -> bool:
+        reg_frac, _ = self.area_fractions(ground_truth)
+        return reg_frac > self.viable_thresh
 
     def __invert__(self):
         return RegionExpr('~', self)
