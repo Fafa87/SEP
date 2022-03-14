@@ -62,16 +62,6 @@ class RegionExpr(Region):
         self.operator = operator
         self.regions = regions
 
-    def regionize(self, ground_truth: np.ndarray, mask: np.ndarray) -> np.ndarray:
-        if self.operator == '|':
-            return self.regions[0].regionize(ground_truth, mask) | self.regions[1].regionize(ground_truth, mask)
-        elif self.operator == '&':
-            return self.regions[0].regionize(ground_truth, mask) & self.regions[1].regionize(ground_truth, mask)
-        elif self.operator == '~':
-            return ~self.regions[0].regionize(ground_truth, mask)
-        else:
-            assert_arg(False, self.operator)
-
     def extract_region(self, ground_truth: np.ndarray) -> np.ndarray:
         if self.operator == '|':
             return self.regions[0].extract_region(ground_truth) | self.regions[1].extract_region(ground_truth)
