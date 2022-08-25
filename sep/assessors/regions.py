@@ -109,7 +109,7 @@ class EdgesRegion(Region):
         eroded = skimage.morphology.binary_erosion(ground_truth, selem)
         final_region = dilated > eroded
         if self.downsample_x:
-            final_region = skimage.transform.resize(ground_truth, original_shape)
+            final_region = skimage.transform.resize(final_region, original_shape)
             # Ensure region is binary.
             final_region = final_region > 0.5
         return final_region
