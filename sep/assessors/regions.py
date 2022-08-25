@@ -2,7 +2,9 @@ from abc import abstractmethod, ABC
 import typing as t
 
 import numpy as np
+
 import skimage.morphology
+import skimage.transform
 
 from sep._commons.utils import *
 
@@ -82,7 +84,7 @@ class EntireRegion(Region):
 
 
 class EdgesRegion(Region):
-    def __init__(self, edge_size, name="Edges"):
+    def __init__(self, edge_size, name="Edges", downsample_x=None):
         """
         Region consisting of the edge of the ground truth.
         Args:
@@ -90,8 +92,14 @@ class EdgesRegion(Region):
         """
         super().__init__(name)
         self.edge_size = edge_size
+        self.downsample_x = downsample_x
 
     def extract_region(self, ground_truth: np.ndarray) -> np.ndarray:
+        if self.downsample_x:
+            original_shape = ground_truth.shape
+            scale = self.downsample_x / ground_truth.shape[1]
+            ground_truth = skimage.transform.rescale(ground_truth, scale)
+
         if isinstance(self.edge_size, float):
             mean_size = (ground_truth.shape[0] + ground_truth.shape[1]) / 2
             selem = skimage.morphology.disk(mean_size * self.edge_size)
@@ -99,7 +107,10 @@ class EdgesRegion(Region):
             selem = skimage.morphology.disk(self.edge_size)
         dilated = skimage.morphology.binary_dilation(ground_truth, selem)
         eroded = skimage.morphology.binary_erosion(ground_truth, selem)
-        return dilated > eroded
+        final_region = dilated > eroded
+        if self.downsample_x:
+            final_region = skimage.transform.resize(ground_truth, original_shape)
+        return final_region
 
 
 class DetailsRegion(Region):
@@ -125,7 +136,7 @@ class DetailsRegion(Region):
 set_standard = [
     EntireRegion(),
     RegionExpr('~', EdgesRegion(2), name="No edges pixels"),  # Edge pixels are disregarded.
-    EdgesRegion(0.02, name="Mask precision"),  # Difference near the edge.
-    RegionExpr('~', EdgesRegion(0.02), name="Mask robust"),  # Robustness.
+    EdgesRegion(0.02, name="Mask precision", downsample_x=640),  # Difference near the edge.
+    RegionExpr('~', EdgesRegion(0.02, downsample_x=640), name="Mask robust"),  # Robustness.
     DetailsRegion(0.05, name="Mask details"),  # Details (hand, arms, hair).
 ]

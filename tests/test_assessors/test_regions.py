@@ -31,6 +31,20 @@ class TestRegions(TestBase):
         edges_region_float = EdgesRegion(0.2)
         some_region = edges_region_float.regionize(blob_2, blob_1)
 
+    def test_edges_big(self):
+        blob_1 = np.zeros((1080, 1920))
+        blob_2 = np.zeros((1080, 1920))
+
+        # TODO test it better: dtypes and resize interpolation
+        edges_region_float = EdgesRegion(0.02, downsample_x=640)
+        some_region = edges_region_float.regionize(blob_2, blob_1)
+
+        blob_rand_bin_1 = np.random.random((1080, 1920)) > 0.5
+        blob_rand_bin_2 = np.random.random((1080, 1920)) > 0.5
+
+        some_region = edges_region_float.regionize(blob_2, blob_1)
+        print(some_region.dtype)
+
     def test_details_smoke(self):
         details_region_int = DetailsRegion(2)
         blob_1 = np.zeros((10, 10))
