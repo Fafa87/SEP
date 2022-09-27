@@ -4,7 +4,7 @@ import unittest
 
 from sep.assessors.metricer import Metricer
 from sep.assessors.metrics import IouMetric
-from sep.assessors.regions import Region
+from sep.assessors.regions import Region, EdgesRegion, RegionExpr
 from tests.testbase import TestBase
 
 
@@ -61,6 +61,15 @@ class TestMetricer(TestBase):
         self.assertEqual(2, len(report))
         nptest.assert_almost_equal([5.0 / (50 + 5), 5.0 / 50], report[iou_metric.name].values)
         nptest.assert_equal(["Entire image", "Dummy"], report["region"].values)
+
+    def test_downscale_region_metricer(self):
+        blob_rand_bin_1 = np.random.random((1080, 1920)) > 0.5
+        blob_rand_bin_2 = np.random.random((1080, 1920)) > 0.5
+
+        metricer = Metricer()
+        metricer.metrics.append(IouMetric())
+        metricer.regions.append(RegionExpr('~', EdgesRegion(0.02, downsample_x=640), name="Mask robust"))
+        metricer.calculate_metrics(blob_rand_bin_1, blob_rand_bin_2)
 
     def test_evaluate_image(self):
         metricer = Metricer()

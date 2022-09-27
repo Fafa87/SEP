@@ -21,6 +21,8 @@ class Inspector:
         self.additional_tags = additional_tags or dict()
         self.load_tag_to_control = None
         self.viewer = None
+        self.extra_labels = {}
+        self.sample_changed = None
 
     def set_load_tag_to_control(self, load_tag_to_control):
         self.load_tag_to_control = load_tag_to_control
@@ -43,10 +45,16 @@ class Inspector:
     def viewer_created(self):
         return self.viewer is not None
 
-    def create_viewer(self):
+    def add_extra_label(self, name, function):
+        self.extra_labels[name] = function
+        self.extra_images[name] = self.viewer.add_labels(function(self.get_labels_or_empty(0)),
+                                                         name=name, opacity=0.8)
+
+    def create_viewer(self, dock_area_sample="bottom", dock_area_refresh="bottom"):
         self.viewer = napari.Viewer()
         self.input_image = self.viewer.add_image(self.samples_collection[0]['image'], rgb=True)
         self.label_image = self.viewer.add_labels(self.get_labels_or_empty(0))
+        self.extra_images = {}
 
         @magicgui(
             auto_call=True,
@@ -55,8 +63,13 @@ class Inspector:
         def change_sample(Sample: int):
             self.set_sample(Sample)
 
+        @magicgui(call_button='Refresh')
+        def refresh():
+            self.set_sample(self.viewer_state["current"])
+
         self.set_sample(0)
-        self.viewer.window.add_dock_widget(change_sample)
+        self.viewer.window.add_dock_widget(change_sample, area=dock_area_sample)
+        self.viewer.window.add_dock_widget(refresh, area=dock_area_refresh)
 
         @self.viewer.bind_key('z')
         def prev_label(event=None):
@@ -70,12 +83,21 @@ class Inspector:
         current = (new_cur + self.collection_size) % self.collection_size
         self.viewer_state["current"] = current
 
-        self.input_image.data = self.samples_collection[current]['image']
-        self.label_image.data = self.get_labels_or_empty(current)
+        current_im = self.samples_collection[current]['image']
+        current_ann = self.get_labels_or_empty(current)
+        self.input_image.data, self.label_image.data = current_im, current_ann
+        for name in self.extra_images:
+            if self.extra_images[name].visible:
+                self.extra_images[name].data = self.extra_labels[name](current_ann)
+            else:
+                self.extra_images[name].data[:] = 0
 
         self.viewer_state['current_tag'] = self.get_or_copy_tags(current)
         if self.load_tag_to_control:
             self.load_tag_to_control(self.viewer_state['current_tag'])
+
+        if self.sample_changed:
+            self.sample_changed(current, current_im, current_ann)
 
 
 class ReviewEnum(Enum):

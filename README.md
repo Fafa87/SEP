@@ -10,7 +10,7 @@ Semantic Evaluation Platform
 [![PyPi](https://img.shields.io/pypi/pyversions/semevalplatform)](https://pypi.org/project/semevalplatform/)
 ![Platform](https://img.shields.io/badge/platform-windows%20%7C%20osx%20%7C%20ubuntu-lightgrey)
 
-Deserve the money! - ML engineers are paid a lot of money however most of the time is spent on common tasks and debuging standard problems. This is an attempt to help with that.
+As ML engineers you are expected to deliver great results however most of the time is spent on common tasks and debuging standard problems. This is an attempt to help with that.
 
 ## Description
 
@@ -45,3 +45,4 @@ if you are interested in using `napari` based gui you have to install `napari` a
 - grr - virtual green screen
 - grr - physical green screen 
 - msee - foreground separation
+- using_regions_data - supplement existing evaluation scheme with the power of region based analysis.

@@ -2,6 +2,7 @@ import fire
 import napari
 
 import sep.loaders
+import sep.assessors.regions
 from sep._commons.gui import Inspector, add_review_option, ReviewEnum
 
 
@@ -11,6 +12,15 @@ def inspect_loader(data_loader):
         inspector.create_viewer()
         # TODO show and edit tags?
         # TODO show statistics?
+
+
+def inspect_regions(data_loader: sep.loaders.FilesLoader):
+    inspector = Inspector(data_loader)
+    with napari.gui_qt():
+        inspector.create_viewer()
+        regions = sep.assessors.regions.set_standard[1:]
+        for region in regions:
+            inspector.add_extra_label(str(region), region.extract_region)
 
 
 def filter_loader_manual(data_loader: sep.loaders.FilesLoader, save_tags=False):
@@ -47,6 +57,11 @@ def filter_loader_manual(data_loader: sep.loaders.FilesLoader, save_tags=False):
     print(f"Now loader has {len(data_loader)} samples.")
 
 
+def regions_for_dataset(data_root, listing_path):
+    loader = sep.loaders.ImagesLoader.from_listing(data_root, listing_path)
+    inspect_regions(loader)
+
+
 def filter_dataset_listing(data_root, listing_path, output_path, verbose=1,
                            add_tag_path=True, ensure_samples_exist=True, preserve_order=True):
     if verbose:
@@ -61,4 +76,7 @@ def filter_dataset_listing(data_root, listing_path, output_path, verbose=1,
 
 
 if __name__ == '__main__':
-    fire.Fire()
+    fire.Fire({
+        "filter_dataset_listing": filter_dataset_listing,
+        "regions_for_dataset": regions_for_dataset
+    })

@@ -17,7 +17,7 @@ class Metric(ABC):
 
     def show(self, segmentation: np.ndarray, ground_truth: np.ndarray) -> float:
         metric_value = self.calculate(segmentation, ground_truth)
-        print (f"{self}: {metric_value:.4f}")
+        print(f"{self}: {metric_value:.4f}")
 
     def __str__(self):
         return self.name
@@ -35,3 +35,13 @@ class IouMetric(Metric):
 
         return np.sum(np.logical_and(segmentation, ground_truth)) / \
                np.sum(np.logical_or(segmentation, ground_truth)) + 0.00000001
+
+
+class RMSEMetric(Metric):
+    def __init__(self):
+        super().__init__("rmse")
+
+    def calculate(self, segmentation, ground_truth) -> float:
+        segmentation = segmentation.astype(np.float32)
+        ground_truth = ground_truth.astype(np.float32)
+        return np.sqrt(np.mean((segmentation - ground_truth) ** 2))
