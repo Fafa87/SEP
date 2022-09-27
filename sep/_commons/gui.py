@@ -22,6 +22,7 @@ class Inspector:
         self.load_tag_to_control = None
         self.viewer = None
         self.extra_labels = {}
+        self.sample_changed = None
 
     def set_load_tag_to_control(self, load_tag_to_control):
         self.load_tag_to_control = load_tag_to_control
@@ -49,7 +50,7 @@ class Inspector:
         self.extra_images[name] = self.viewer.add_labels(function(self.get_labels_or_empty(0)),
                                                          name=name, opacity=0.8)
 
-    def create_viewer(self):
+    def create_viewer(self, dock_area_sample="bottom", dock_area_refresh="bottom"):
         self.viewer = napari.Viewer()
         self.input_image = self.viewer.add_image(self.samples_collection[0]['image'], rgb=True)
         self.label_image = self.viewer.add_labels(self.get_labels_or_empty(0))
@@ -67,8 +68,8 @@ class Inspector:
             self.set_sample(self.viewer_state["current"])
 
         self.set_sample(0)
-        self.viewer.window.add_dock_widget(change_sample)
-        self.viewer.window.add_dock_widget(refresh)
+        self.viewer.window.add_dock_widget(change_sample, area=dock_area_sample)
+        self.viewer.window.add_dock_widget(refresh, area=dock_area_refresh)
 
         @self.viewer.bind_key('z')
         def prev_label(event=None):
@@ -94,6 +95,9 @@ class Inspector:
         self.viewer_state['current_tag'] = self.get_or_copy_tags(current)
         if self.load_tag_to_control:
             self.load_tag_to_control(self.viewer_state['current_tag'])
+
+        if self.sample_changed:
+            self.sample_changed(current, current_im, current_ann)
 
 
 class ReviewEnum(Enum):
