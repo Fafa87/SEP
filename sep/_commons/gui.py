@@ -52,9 +52,9 @@ class Inspector:
         self.extra_images[name] = self.viewer.add_labels(function(self.get_labels_or_empty(0)),
                                                          name=name, opacity=0.8)
 
-    def create_viewer(self, dock_area_sample="bottom", dock_area_refresh="bottom"):
+    def create_viewer(self, dock_area_sample="bottom", dock_area_refresh="bottom", rgb_images=True):
         self.viewer = napari.Viewer()
-        self.input_image = self.viewer.add_image(self.samples_collection[0]['image'], rgb=True)
+        self.input_image = self.viewer.add_image(self.samples_collection[0]['image'], rgb=rgb_images)
         self.label_image = self.viewer.add_labels(self.get_labels_or_empty(0))
         self.extra_images = {}
 
@@ -82,14 +82,14 @@ class Inspector:
 
         @self.viewer.bind_key('z')
         def prev_label(event=None):
-            if loop_images:
+            if self.loop_images:
                 change_sample.Sample.value = (self.viewer_state["current"] - 1 + self.collection_size) % self.collection_size
             else:
                 change_sample.Sample.value = max(0, self.viewer_state["current"] - 1)
 
         @self.viewer.bind_key('c')
         def next_label(event=None):
-            if loop_images:
+            if self.loop_images:
                 change_sample.Sample.value = (self.viewer_state["current"] + 1 + self.collection_size) % self.collection_size
             else:
                 change_sample.Sample.value = min(self.collection_size - 1, self.viewer_state["current"] + 1)
