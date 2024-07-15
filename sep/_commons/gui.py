@@ -13,7 +13,7 @@ class Inspector:
     # TODO docs
     # TODO add standard tags usage
     # TODO add information about the name of the current file
-    def __init__(self, samples_collection, additional_tags: dict = None):
+    def __init__(self, samples_collection, additional_tags: dict = None, loop_images=True, hide_left=True):
         self.samples_collection = samples_collection
         self.collection_size = len(samples_collection)
         self.viewer_state = {"current": 0, 'current_tag': {}, 'temporary_tags': {}}
@@ -23,6 +23,8 @@ class Inspector:
         self.viewer = None
         self.extra_labels = {}
         self.sample_changed = None
+        self.loop_images = loop_images
+        self.hide_left = hide_left
 
     def set_load_tag_to_control(self, load_tag_to_control):
         self.load_tag_to_control = load_tag_to_control
@@ -58,10 +60,13 @@ class Inspector:
 
         @magicgui(
             auto_call=True,
-            Sample={"widget_type": "IntSlider", "max": self.collection_size - 1},
+            Sample={"widget_type": "IntSlider", "max": self.collection_size - 1, "readout": True}
         )
         def change_sample(Sample: int):
             self.set_sample(Sample)
+
+        # Stop it from getting focus after each sample change.
+        change_sample.Sample.changed.connect(lambda val: change_sample.Sample.native.setFocus())
 
         @magicgui(call_button='Refresh')
         def refresh():
@@ -71,13 +76,23 @@ class Inspector:
         self.viewer.window.add_dock_widget(change_sample, area=dock_area_sample)
         self.viewer.window.add_dock_widget(refresh, area=dock_area_refresh)
 
+        if self.hide_left:
+            self.viewer.window._qt_viewer.dockLayerList.setVisible(False)
+            self.viewer.window._qt_viewer.dockLayerControls.setVisible(False)
+
         @self.viewer.bind_key('z')
         def prev_label(event=None):
-            change_sample.Sample.value = (self.viewer_state["current"] - 1 + self.collection_size) % self.collection_size
+            if loop_images:
+                change_sample.Sample.value = (self.viewer_state["current"] - 1 + self.collection_size) % self.collection_size
+            else:
+                change_sample.Sample.value = max(0, self.viewer_state["current"] - 1)
 
         @self.viewer.bind_key('c')
         def next_label(event=None):
-            change_sample.Sample.value = (self.viewer_state["current"] + 1 + self.collection_size) % self.collection_size
+            if loop_images:
+                change_sample.Sample.value = (self.viewer_state["current"] + 1 + self.collection_size) % self.collection_size
+            else:
+                change_sample.Sample.value = min(self.collection_size - 1, self.viewer_state["current"] + 1)
 
     def set_sample(self, new_cur):
         current = (new_cur + self.collection_size) % self.collection_size
